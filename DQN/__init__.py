@@ -353,7 +353,7 @@ class deepQ:
             upd_FC_k0,upd_FC_b0 = self.update_layer('FC_layer0/dense')
             upd_k_out,upd_b_out = self.update_layer('layer_out/dense')
 
-            #update_target = tf.group()
+            update_target = tf.group(upd_c_k0, upd_c_b0, upd_c_k1, upd_c_b1, upd_FC_k0, upd_FC_b0, upd_k_out, upd_b_out)
 
             # ------------------------------------------------------------------
             # create some tenorboard outputs for real-time analysis
@@ -678,10 +678,11 @@ class deepQ:
                 # of the target network to be those of the online network
                 if (np.mod(epi,self.HYPERPARAMS['UPDATE_FREQ'])==0):
                     #update the layers by running the update ops...
-                    sess.run([upd_c_k0,upd_c_b0,
-                              upd_c_k1,upd_c_b1,
-                              upd_FC_k0, upd_FC_b0,
-                              upd_k_out, upd_b_out])
+                    sess.run(update_target)
+                    # sess.run([upd_c_k0,upd_c_b0,
+                    #           upd_c_k1,upd_c_b1,
+                    #           upd_FC_k0, upd_FC_b0,
+                    #           upd_k_out, upd_b_out])
 
 
 
