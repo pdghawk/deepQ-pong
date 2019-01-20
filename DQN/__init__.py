@@ -631,12 +631,47 @@ class deepQ:
                     summarynew = tf.Summary(value=[tf.Summary.Value(tag='avg steps', simple_value=steps_p_ep[out_count])])
                     summarynew.value.add(tag='avg reward', simple_value=reward_p_ep[out_count])
                     summarynew.value.add(tag='avg max Q', simple_value=max_Q_p_ep[out_count])
+
+
+                    # ALSO: at the output points, make a validation check
+                    # run a game with no random moves: what is score
+                    avg_valid_reward = 0
+                    N_valid = 10
+                    for j in np.arange(N_valid):
+                        valid_reward = 0.0
+                        current_obs = self.env.reset()
+                        current_obs = self.preprocess(current_obs)
+                        current_phi = np.tile( current_obs[:,:,np.newaxis], (1,1,self.PARAMS['Nc']) )
+                        for i in np.arange(self.PARAMS['MAX_STEPS']):
+                            # get action using the Q net
+
+                            tmp_feed_dict = {phi_i_:current_phi[np.newaxis,:,:,:],
+                                            phi_j_:current_phi[np.newaxis,:,:,:],
+                                            a_i_:memory_normal.memory_a_i[:1,:],
+                                            r_i_:memory_normal.memory_r_i[:1,:],
+                                            t_i_:memory_normal.memory_terminal_i[:1,:]}
+
+                            # use Q network graph to get Q_i, uses the online network
+                            Q = np.squeeze(sess.run([Q_i_],tmp_feed_dict))
+                            # the action to be taken, is one that maximises Q
+                            action = np.argmax(Q)
+                            new_obs, reward, done, info = self.env.step(action)
+                            valid_reward+=reward
+                            if (done):
+                                break
+                        avg_valid_reward+=valid_reward
+
+                    avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
+                    summarynew.value.add(tag='avg validation score', simple_value=avg_valid_reward)
+
                     writer.add_summary(summarynew, epi)
 
                     time_ep2 = time.time()
                     print(" on epsiode {a:d} ----- avg steps = {b:.1f} ------ avg reward = {c:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],c=reward_p_ep[out_count],d=eps_tmp,e=time_ep2-time_ep1))
                     time_ep1 = time.time()
                     out_count+=1
+
+
 
 
                 # if epsioside is a multiple of UPDATE_FREQ update the weights/biases
