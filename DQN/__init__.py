@@ -656,6 +656,11 @@ class deepQ:
                             # the action to be taken, is one that maximises Q
                             action = np.argmax(Q)
                             new_obs, reward, done, info = self.env.step(action)
+
+                            new_obs = self.preprocess(new_obs)
+                            new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
+                            current_phi = 1.0*new_phi
+                            
                             valid_reward+=reward
                             if (done):
                                 break
