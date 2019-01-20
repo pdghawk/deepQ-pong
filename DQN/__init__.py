@@ -662,7 +662,7 @@ class deepQ:
                         avg_valid_reward+=valid_reward
 
                     avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
-                    summarynew.value.add(tag='avg validation score', simple_value=avg_valid_reward)
+                    summarynew.value.add(tag='avg validation reward', simple_value=avg_valid_reward)
 
                     writer.add_summary(summarynew, epi)
 
