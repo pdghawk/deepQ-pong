@@ -203,7 +203,7 @@ if 1==0:
 
 if 1==1:
 
-    N_episodes = 400
+    N_episodes = 20
     results = []
     alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
     update_vec = np.array([2])

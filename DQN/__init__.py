@@ -4,6 +4,11 @@ from keras import backend as K
 import numpy as np
 import time
 
+import matplotlib #.pyplot as plt
+matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 import gym
 
 # ------------------------------------------------------------------------------
@@ -140,7 +145,9 @@ class deepQ:
         print("using tensorflow version  :  ", tf.VERSION)
 
 
-        self.graph = tf.Graph()
+        self.graph = tf.get_default_graph() #tf.Graph()
+
+        self.params_text = f"NFC_{HYPERPARAMS['N_FC']:d}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}"
 
         return None
 
@@ -240,30 +247,42 @@ class deepQ:
         return upd_k,upd_b
 
     #---------------------------------------------------------------------------
-    #---------------------------------------------------------------------------
 
+    def make_graph(self):
+        """ Define the computational graph
 
-
-    def train(self, N_episodes):
-        """train the DeepQ network
+        takes in the game states (before and after action), action, reward, and
+        whether terminal as placeholders. Uses these to compute Q values for
+        both online and target networks. Applies the double deep Q learning
+        algorithm, using self.Qnet as the neural network which predicts the
+        Q values for a given state.
 
         Args:
-            N_epsiodes: how many episodes to train over
+            Placeholders:
+                - phi_i_: state before action
+                - phi_j_: state after action
+                - a_i_: action taken
+                - r_i_: reward for taking action
+                - t_i_: terminal move signifier (0 if final, 1 otherwise)
 
         Returns:
-            out_dict: A dictionary of how various things evolved during during:
-                    - rewards':  average reward per epsiode
-                    - 'steps':   average steps per epsiode
-                    - 'maxQ':    average max_Q epsiode
-                    - 'minQ':    average min_Q per epsiode
-                    - 'losses':  average loss per epsiode
-                    - 'actions': average action per epsiode
-                    - 'epsilon': average epsilon per epsiode
+            graph_vars: dictionary of variables of graph which are useful:
+                        - graph_init:       graph initializer (global)
+                        - graph_local_init: graph initializer (local)
+                        - Q_i_:Q values predicted by Qnet on phi_i (online net)
+                        - loss_:    loss on batch,
+                        - train_op: training tf op
+                        - update_target:updates target network weights to online weights
+                        - merged: op to merge summaries for tensorboard
+                        - phi_i_: placeholder phi_i_
+                        - phi_j_: placeholder phi_j_
+                        - a_i_:  placeholder a_i_,
+                        - r_i_:  placeholder r_i_,
+                        - t_i_:  placeholder t_i_,
+                        - saver: tf saver for saving meta graph and variables
 
 
         """
-
-        # define the computational graph for traing the Q network
         with self.graph.as_default():
 
             # placeholders for the states, actions, rewards, and whether terminal
@@ -364,13 +383,59 @@ class deepQ:
             graph_init = tf.global_variables_initializer()
             graph_local_init = tf.local_variables_initializer()
 
+        saver = tf.train.Saver()
+
+        graph_vars = {'graph_init':graph_init,
+                        'graph_local_init':graph_local_init,
+                        'Q_i_':Q_i_,
+                        'loss_':loss_,
+                        'train_op':train_op,
+                        'update_target':update_target,
+                        'merged':merged,
+                        'phi_i_':phi_i_,
+                        'phi_j_':phi_j_,
+                        'a_i_':a_i_,
+                        'r_i_':r_i_,
+                        't_i_':t_i_,
+                        'saver':saver}
+        return graph_vars
+
+
+
+
+    #---------------------------------------------------------------------------
+
+
+
+    def train(self, N_episodes):
+        """train the DeepQ network
+
+        Args:
+            N_epsiodes: how many episodes to train over
+
+        Returns:
+            out_dict: A dictionary of how various things evolved during during:
+                    - rewards':  average reward per epsiode
+                    - 'steps':   average steps per epsiode
+                    - 'maxQ':    average max_Q epsiode
+                    - 'minQ':    average min_Q per epsiode
+                    - 'losses':  average loss per epsiode
+                    - 'actions': average action per epsiode
+                    - 'epsilon': average epsilon per epsiode
+
+
+        """
+
+        # define the computational graph for traing the Q network
+        graph_vars = self.make_graph()
+
 
         # ----------------------------------------------------------------------
         # ----------------- now use the graph above as the session -------------
         with tf.Session(graph=self.graph) as sess:
             #K.set_session(sess)
-            sess.run(graph_init)
-            sess.run(graph_local_init)
+            sess.run(graph_vars['graph_init'])
+            sess.run(graph_vars['graph_local_init'])
 
             print(tf.trainable_variables())
 
@@ -474,14 +539,14 @@ class deepQ:
                         # only phi_i is actual data
                         # phi_j, a_i, r_i are just dummy really as not used
 
-                        tmp_feed_dict = {phi_i_:current_phi[np.newaxis,:,:,:],
-                                        phi_j_:current_phi[np.newaxis,:,:,:],
-                                        a_i_:memory_normal.memory_a_i[:1,:],
-                                        r_i_:memory_normal.memory_r_i[:1,:],
-                                        t_i_:memory_normal.memory_terminal_i[:1,:]}
+                        tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
+                                        graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                                        graph_vars['a_i_']:memory_normal.memory_a_i[:1,:],
+                                        graph_vars['r_i_']:memory_normal.memory_r_i[:1,:],
+                                        graph_vars['t_i_']:memory_normal.memory_terminal_i[:1,:]}
 
                         # use Q network graph to get Q_i, uses the online network
-                        Q = np.squeeze(sess.run([Q_i_],tmp_feed_dict))
+                        Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                         #Qhat = sess.run([Q_j_],tmp_feed_dict)
 
                         # append the max and min Q to the lists (will be averaged later)
@@ -565,20 +630,20 @@ class deepQ:
                         r_i_batch   = np.concatenate((batch_n['r_i']  , batch_l['r_i'])    , axis=0)
                         t_i_batch   = np.concatenate((batch_n['t_i']  , batch_l['t_i'])    , axis=0)
 
-                        feed_dict_batch = { phi_i_:(phi_i_batch).astype(np.float32),
-                                            phi_j_:(phi_j_batch).astype(np.float32),
-                                            r_i_:r_i_batch,
-                                            a_i_:a_i_batch,
-                                            t_i_:t_i_batch}
+                        feed_dict_batch = { graph_vars['phi_i_']:(phi_i_batch).astype(np.float32),
+                                            graph_vars['phi_j_']:(phi_j_batch).astype(np.float32),
+                                            graph_vars['r_i_']:r_i_batch,
+                                            graph_vars['a_i_']:a_i_batch,
+                                            graph_vars['t_i_']:t_i_batch}
 
                         # get the loss for this batch
-                        loss0 = sess.run(loss_,feed_dict=feed_dict_batch)
+                        loss0 = sess.run(graph_vars['loss_'],feed_dict=feed_dict_batch)
                         # append loss to be averaged later
                         losses.append(loss0)
 
                         # get the loss sent as a scalr to tensorboard summary
-                        tmp_summary = sess.run(merged,feed_dict=feed_dict_batch)
-                        writer.add_summary(tmp_summary, epi)
+                        # tmp_summary = sess.run(graph_vars['merged'],feed_dict=feed_dict_batch)
+                        # writer.add_summary(tmp_summary, epi)
 
 
 
@@ -586,7 +651,7 @@ class deepQ:
                         # APPLY GRADIENT DESCENT for batch
                         # only perform if episopde is > EPI_START
                         if(epi>self.HYPERPARAMS['EPI_START']):
-                            train_op.run(feed_dict=feed_dict_batch)
+                            graph_vars['train_op'].run(feed_dict=feed_dict_batch)
 
 
                     # ----------------------------------------------------------
@@ -631,6 +696,7 @@ class deepQ:
                     summarynew = tf.Summary(value=[tf.Summary.Value(tag='avg steps', simple_value=steps_p_ep[out_count])])
                     summarynew.value.add(tag='avg reward', simple_value=reward_p_ep[out_count])
                     summarynew.value.add(tag='avg max Q', simple_value=max_Q_p_ep[out_count])
+                    summarynew.value.add(tag='avg loss', simple_value=loss_p_ep[out_count])
 
 
                     # ALSO: at the output points, make a validation check
@@ -645,14 +711,14 @@ class deepQ:
                         for i in np.arange(self.PARAMS['MAX_STEPS']):
                             # get action using the Q net
 
-                            tmp_feed_dict = {phi_i_:current_phi[np.newaxis,:,:,:],
-                                            phi_j_:current_phi[np.newaxis,:,:,:],
-                                            a_i_:memory_normal.memory_a_i[:1,:],
-                                            r_i_:memory_normal.memory_r_i[:1,:],
-                                            t_i_:memory_normal.memory_terminal_i[:1,:]}
+                            tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
+                                            graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                                            graph_vars['a_i_']:memory_normal.memory_a_i[:1,:],
+                                            graph_vars['r_i_']:memory_normal.memory_r_i[:1,:],
+                                            graph_vars['t_i_']:memory_normal.memory_terminal_i[:1,:]}
 
                             # use Q network graph to get Q_i, uses the online network
-                            Q = np.squeeze(sess.run([Q_i_],tmp_feed_dict))
+                            Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                             # the action to be taken, is one that maximises Q
                             action = np.argmax(Q)
                             new_obs, reward, done, info = self.env.step(action)
@@ -660,7 +726,7 @@ class deepQ:
                             new_obs = self.preprocess(new_obs)
                             new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
                             current_phi = 1.0*new_phi
-                            
+
                             valid_reward+=reward
                             if (done):
                                 break
@@ -683,12 +749,19 @@ class deepQ:
                 # of the target network to be those of the online network
                 if (np.mod(epi,self.HYPERPARAMS['UPDATE_FREQ'])==0):
                     #update the layers by running the update ops...
-                    sess.run(update_target)
+                    sess.run(graph_vars['update_target'])
                     # sess.run([upd_c_k0,upd_c_b0,
                     #           upd_c_k1,upd_c_b1,
                     #           upd_FC_k0, upd_FC_b0,
                     #           upd_k_out, upd_b_out])
 
+            #-------------------------------------------------------------------
+
+            # n.b we are still inside with session as sess statement
+
+            # training has finished - save a checkpoint to load later if want
+            # to use the learned weights to actually play the game
+            saved_path  = graph_vars['saver'].save(sess,"./../ckpts"+"/"+self.params_text)
 
 
 
@@ -696,3 +769,56 @@ class deepQ:
         return out_dict
 
     #---------------------------------------------------------------------------
+
+    def play_animated_game(self):
+        #params_text = f"NFC_{self.HYPERPARAMS['N_FC']:d}"
+        save_loc    = "./../ckpts"+"/"+self.params_text #+".ckpt"
+
+        graph_vars = self.make_graph()
+
+        #saver = tf.train.Saver()
+        with tf.Session(graph=self.graph) as sess:
+            new_saver = tf.train.import_meta_graph(save_loc+'.meta')
+            #new_saver.restore(sess, save_loc+'.data-00000-of-00001')
+            new_saver.restore(sess,tf.train.latest_checkpoint("./../ckpts/"))
+            #saver.restore(sess,save_loc)
+
+            ims = []
+            fig = plt.figure()
+
+            current_obs = self.env.reset()
+            current_obs = self.preprocess(current_obs)
+            current_phi = np.tile( current_obs[:,:,np.newaxis], (1,1,self.PARAMS['Nc']) )
+            valid_steps = 0
+
+            for i in np.arange(self.PARAMS['MAX_STEPS']):
+                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
+                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                                graph_vars['a_i_']:np.zeros((1,1)),
+                                graph_vars['r_i_']:np.zeros((1,1)),
+                                graph_vars['t_i_']:np.zeros((1,1))}
+
+                # use Q network graph to get Q_i, uses the online network
+                Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
+                # the action to be taken, is one that maximises Q
+                action = np.argmax(Q)
+                new_obs, reward, done, info = self.env.step(action)
+
+                new_obs = self.preprocess(new_obs)
+                new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
+                current_phi = 1.0*new_phi
+
+                # im = plt.imshow(frame, animated=True)
+                # ims.append([im])
+                self.env.render()
+                if (done):
+                    break
+            self.env.close()
+            # ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
+            #
+            # Writer = animation.writers['ffmpeg']
+            # writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+            #
+            # ani.save('./../figs/'+params_text+'.mp4',writer=writer)
+
+        return None
