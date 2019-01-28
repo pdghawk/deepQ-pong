@@ -124,31 +124,36 @@ class deepQ:
     object contains methods for preprocessing frames of gym games
 
     """
-    # --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def __init__(self,game,HYPERPARAMS,PARAMS):
+        """initialize useful stuff"""
 
         self.env = gym.make(game)
-
 
         self.HYPERPARAMS = HYPERPARAMS
         self.PARAMS   = PARAMS
 
         self.N_action = self.env.action_space.n
 
-
         self.graph = tf.get_default_graph() #tf.Graph()
 
-        self.params_text = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_NFC_{HYPERPARAMS['N_FC']:d}_NFilter_{HYPERPARAMS['N_FILTER']:d}_mem_{HYPERPARAMS['N_memory']:d}_batch_{HYPERPARAMS['N_batch']:d}"
-
+        alpha_txt = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_"
+        upd_txt   = f"updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_"
+        decay_txt = f"EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_"
+        nfc_txt   = f"NFC_{HYPERPARAMS['N_FC']:d}_"
+        nfilt_txt = f"Nfilter_{HYPERPARAMS['N_FILTER']:d}_"
+        mem_txt   = f"mem_{HYPERPARAMS['N_memory']:d}_"
+        batch_txt = f"batch_{HYPERPARAMS['N_batch']:d}"
+        self.params_text = alpha_txt+upd_txt+decay_txt+nfc_txt+\
+                           nfilt_txt+mem_txt+batch_txt
+        #self.params_text = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_NFC_{HYPERPARAMS['N_FC']:d}_NFilter_{HYPERPARAMS['N_FILTER']:d}_mem_{HYPERPARAMS['N_memory']:d}_batch_{HYPERPARAMS['N_batch']:d}"
 
         print("\n==========================================================")
         print("\n\n filename for saving       : ",self.params_text)
-
         print(" action space has size     : ",self.N_action)
-
         print(" using tensorflow version  : ",tf.VERSION, "\n\n")
         print("==========================================================\n")
         return None
@@ -171,8 +176,6 @@ class deepQ:
         tmp = tmp[28:-12, :]
         tmp = tmp[1:-1:2,::2]
         frame_out[:,2:-2] = tmp.astype(np.uint8)
-
-
         return frame_out
 
     #---------------------------------------------------------------------------
@@ -442,7 +445,8 @@ class deepQ:
             print(tf.trainable_variables())
 
             summary=tf.Summary()
-            writer = tf.summary.FileWriter('%s/%s' % ('./../data_summaries', time.strftime("%Y%m%d-%H%M%S")),sess.graph)
+            #writer = tf.summary.FileWriter('%s/%s' % ('./../data_summaries', time.strftime("%Y%m%d-%H%M%S")),sess.graph)
+            writer = tf.summary.FileWriter('%s/%s' % ('./../data_summaries', self.params_text),sess.graph)
 
 
             # ------------------------------------------------------------------
@@ -829,7 +833,12 @@ class deepQ:
         return None
 
     def save_animated_game(self):
-        #params_text = f"NFC_{self.HYPERPARAMS['N_FC']:d}"
+        """save a game to mp4 format
+
+        this function loads game from checkpoint, so make sure you already ran
+        a game with the hyperparams you want to check.
+
+        """
         save_loc    = "./../ckpts"+"/"+self.params_text #+".ckpt"
 
         graph_vars = self.make_graph()
