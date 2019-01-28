@@ -138,17 +138,19 @@ class deepQ:
 
         self.N_action = self.env.action_space.n
 
-        #self.N_action = 3 # for pong only use useful commands
-
-        print("action space has size: ", self.N_action)
-
-        print("using tensorflow version  :  ", tf.VERSION)
-
 
         self.graph = tf.get_default_graph() #tf.Graph()
 
-        self.params_text = f"NFC_{HYPERPARAMS['N_FC']:d}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}"
+        self.params_text = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_NFC_{HYPERPARAMS['N_FC']:d}_NFilter_{HYPERPARAMS['N_FILTER']:d}_mem_{HYPERPARAMS['N_memory']:d}_batch_{HYPERPARAMS['N_batch']:d}"
 
+
+        print("\n==========================================================")
+        print("\n\n filename for saving       : ",self.params_text)
+
+        print(" action space has size     : ",self.N_action)
+
+        print(" using tensorflow version  : ",tf.VERSION, "\n\n")
+        print("==========================================================\n")
         return None
 
     # --------------------------------------------------------------------------
@@ -697,6 +699,7 @@ class deepQ:
                     summarynew.value.add(tag='avg reward', simple_value=reward_p_ep[out_count])
                     summarynew.value.add(tag='avg max Q', simple_value=max_Q_p_ep[out_count])
                     summarynew.value.add(tag='avg loss', simple_value=loss_p_ep[out_count])
+                    summarynew.value.add(tag='epsilon', simple_value=eps_tmp)
 
 
                     # ALSO: at the output points, make a validation check

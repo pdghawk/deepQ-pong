@@ -41,18 +41,18 @@ env.reset()
 
 frame, reward, done, tmp = env.step(env.action_space.sample())
 
-print('\n   frame shape is  -----  ', np.shape(frame), '   ------- \n')
+#print('\n   frame shape is  -----  ', np.shape(frame), '   ------- \n')
 
 N_obs = np.size(frame,0)
 
 
 o1 = int( ( (84-8)/4 ) + 1 )
-print(o1)
+#print(o1)
 o2 = int( ( (o1-4)/2 ) + 1 )
-print(o2)
+#print(o2)
 N_squash = o2
 
-print(N_squash)
+#print(N_squash)
 
 #env.render()
 #
@@ -141,7 +141,7 @@ HYPERPARAMS = {
                 'EPSILON_L':0.02,
                 'EPS_DECAY':60000.0,
                 'EPI_SWAP':10000,
-                'EPI_START':10,
+                'EPI_START':12,
                 'N_FILTER':2,
                 'N_FC':4,
                 'N_memory':80000,
@@ -243,20 +243,20 @@ if 1==1:
         if run_type=='alpha':
             HYPERPARAMS['ALPHA'] = vals[i]
         elif run_type=='update_freq':
-            print('update option')
+            print(' \n ---- running update option  ----- \n')
             #HYPERPARAMS['ALPHA'] = 1.0e-4
             HYPERPARAMS['UPDATE_FREQ'] = vals[i]
         elif run_type=='batch':
-            print('batch option')
+            print(' \n ---- running batch option   ----- \n')
             HYPERPARAMS['N_batch'] = vals[i]
         elif run_type=='loss_scale':
-            print('loss option')
+            print(' \n ---- running loss option   ----- \n')
             HYPERPARAMS['LOSS_SCALE'] = vals[i]
         elif run_type=='decay':
-            print('decay option')
+            print(' \n ---- running decay option')
             HYPERPARAMS['EPS_DECAY'] = vals[i]
-        elif run_type=='rate_increase':
-            print('rate increase option')
+        elif run_type=='rate_increase   ----- \n':
+            print(' \n ---- running rate increase option')
             HYPERPARAMS['RATE_INCREASE'] = vals[i]
         else:
             print('Unknown run_type')
