@@ -36,7 +36,7 @@ matplotlib.rcParams['axes.labelweight'] = 'bold'
 matplotlib.rcParams['font.size']        = 10
 matplotlib.rcParams['legend.frameon']   = False
 matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
-sns.set()
+#sns.set()
 # ------------------------------------------------------------------------------
 
 game = 'Pong-v0'
@@ -94,4 +94,4 @@ PARAMS = {  'N_x': 84,
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-deepQ.play_animated_game()
+deepQ.save_animated_game()

@@ -808,6 +808,8 @@ class deepQ:
                 new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
                 current_phi = 1.0*new_phi
 
+                time.sleep(0.04)
+
                 # im = plt.imshow(frame, animated=True)
                 # ims.append([im])
                 self.env.render()
@@ -820,5 +822,59 @@ class deepQ:
             # writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
             #
             # ani.save('./../figs/'+params_text+'.mp4',writer=writer)
+
+        return None
+
+    def save_animated_game(self):
+        #params_text = f"NFC_{self.HYPERPARAMS['N_FC']:d}"
+        save_loc    = "./../ckpts"+"/"+self.params_text #+".ckpt"
+
+        graph_vars = self.make_graph()
+
+        #saver = tf.train.Saver()
+        with tf.Session(graph=self.graph) as sess:
+            new_saver = tf.train.import_meta_graph(save_loc+'.meta')
+            #new_saver.restore(sess, save_loc+'.data-00000-of-00001')
+            new_saver.restore(sess,tf.train.latest_checkpoint("./../ckpts/"))
+            #saver.restore(sess,save_loc)
+
+            ims = []
+            fig = plt.figure()
+
+            current_obs = self.env.reset()
+            current_obs = self.preprocess(current_obs)
+            current_phi = np.tile( current_obs[:,:,np.newaxis], (1,1,self.PARAMS['Nc']) )
+            valid_steps = 0
+
+            for i in np.arange(self.PARAMS['MAX_STEPS']):
+                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
+                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                                graph_vars['a_i_']:np.zeros((1,1)),
+                                graph_vars['r_i_']:np.zeros((1,1)),
+                                graph_vars['t_i_']:np.zeros((1,1))}
+
+                # use Q network graph to get Q_i, uses the online network
+                Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
+                # the action to be taken, is one that maximises Q
+                action = np.argmax(Q)
+                new_obs, reward, done, info = self.env.step(action)
+
+                # new_obs = self.preprocess(new_obs)
+                # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
+                # current_phi = 1.0*new_phi
+
+
+                im = plt.imshow(new_obs, animated=True)
+                ims.append([im])
+
+                if (done):
+                    break
+            self.env.close()
+            ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
+
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+
+            ani.save('./../figs/'+self.params_text+'.mp4',writer=writer)
 
         return None
