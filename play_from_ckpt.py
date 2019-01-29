@@ -72,14 +72,14 @@ HYPERPARAMS = {
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
-                'EPS_DECAY':60000.0,
+                'EPS_DECAY':100000.0,
                 'EPI_SWAP':10000,
-                'EPI_START':10,
+                'EPI_START':12,
                 'N_FILTER':2,
                 'N_FC':4,
                 'N_memory':80000,
                 'N_batch':2,
-                'UPDATE_FREQ':2,
+                'UPDATE_FREQ':5,
                 'RATE_INCREASE':1,
                 'LOSS_SCALE':2.0
                 }
