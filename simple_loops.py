@@ -142,6 +142,7 @@ for i in np.arange(len(vals)):
 
 
     deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
+    tmp_dict = deepQ.train(N_episodes)
     #deepQ.game(1)
 
     # results.append(deepQ.train(N_episodes))

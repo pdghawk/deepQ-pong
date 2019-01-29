@@ -138,6 +138,7 @@ class deepQ:
 
         self.N_action = self.env.action_space.n
 
+        tf.reset_default_graph()
         self.graph = tf.get_default_graph() #tf.Graph()
 
         alpha_txt = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_"
@@ -742,7 +743,7 @@ class deepQ:
                     avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
                     summarynew.value.add(tag='avg validation reward', simple_value=avg_valid_reward)
 
-                    writer.add_summary(summarynew, epi)
+                    writer.add_summary(summarynew, epi+1)
 
                     time_ep2 = time.time()
                     print(" on epsiode {a:d} ----- avg steps = {b:.1f} ------ avg reward = {c:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],c=reward_p_ep[out_count],d=eps_tmp,e=time_ep2-time_ep1))

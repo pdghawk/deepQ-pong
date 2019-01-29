@@ -206,7 +206,7 @@ if 1==1:
     N_episodes = 20
     results = []
     alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
-    update_vec = np.array([2])
+    update_vec = np.array([1,3,5])
     batch_vec = np.array([32,64,128])
     loss_scale_vec = np.array([1.0,2.0,4.0,10.0])
     decay_vec = np.array([5.0e3]) #,1.0e4,2.0e4])
