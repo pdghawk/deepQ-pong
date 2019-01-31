@@ -833,14 +833,14 @@ class deepQ:
 
         return None
 
-    def save_animated_game(self):
+    def save_animated_game(self,dir='..'):
         """save a game to mp4 format
 
         this function loads game from checkpoint, so make sure you already ran
         a game with the hyperparams you want to check.
 
         """
-        save_loc    = "./../ckpts"+"/"+self.params_text #+".ckpt"
+        save_loc    = "./"+dir+"/ckpts"+"/"+self.params_text #+".ckpt"
 
         graph_vars = self.make_graph()
 
