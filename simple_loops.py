@@ -62,10 +62,10 @@ HYPERPARAMS = {
                 'EPS_DECAY':100000.0,
                 'EPI_SWAP':10000,
                 'EPI_START':12,
-                'N_FILTER':2,
-                'N_FC':4,
-                'N_memory':80000,
-                'N_batch':2,
+                'N_FILTER':16,
+                'N_FC':256,
+                'N_memory':100000,
+                'N_batch':32,
                 'UPDATE_FREQ':2,
                 'RATE_INCREASE':1,
                 'LOSS_SCALE':2.0
@@ -81,7 +81,7 @@ PARAMS = {  'N_x': 84,
 
 
 
-N_episodes = 20
+N_episodes = 300
 results = []
 alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
 update_vec = np.array([1,3,5])

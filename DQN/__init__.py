@@ -546,8 +546,8 @@ class deepQ:
                         # only phi_i is actual data
                         # phi_j, a_i, r_i are just dummy really as not used
 
-                        tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
-                                        graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                        tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                        graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:]/255.0,
                                         graph_vars['a_i_']:memory_normal.memory_a_i[:1,:],
                                         graph_vars['r_i_']:memory_normal.memory_r_i[:1,:],
                                         graph_vars['t_i_']:memory_normal.memory_terminal_i[:1,:]}
@@ -719,8 +719,8 @@ class deepQ:
                         for i in np.arange(self.PARAMS['MAX_STEPS']):
                             # get action using the Q net
 
-                            tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
-                                            graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                            tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                            graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:]/255.0,
                                             graph_vars['a_i_']:memory_normal.memory_a_i[:1,:],
                                             graph_vars['r_i_']:memory_normal.memory_r_i[:1,:],
                                             graph_vars['t_i_']:memory_normal.memory_terminal_i[:1,:]}
@@ -800,8 +800,8 @@ class deepQ:
             valid_steps = 0
 
             for i in np.arange(self.PARAMS['MAX_STEPS']):
-                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
-                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:]/255.0,
                                 graph_vars['a_i_']:np.zeros((1,1)),
                                 graph_vars['r_i_']:np.zeros((1,1)),
                                 graph_vars['t_i_']:np.zeros((1,1))}
@@ -860,8 +860,8 @@ class deepQ:
             valid_steps = 0
 
             for i in np.arange(self.PARAMS['MAX_STEPS']):
-                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:],
-                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:],
+                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:]/255.0,
                                 graph_vars['a_i_']:np.zeros((1,1)),
                                 graph_vars['r_i_']:np.zeros((1,1)),
                                 graph_vars['t_i_']:np.zeros((1,1))}

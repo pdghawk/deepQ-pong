@@ -77,9 +77,9 @@ HYPERPARAMS = {
                 'EPI_START':12,
                 'N_FILTER':2,
                 'N_FC':4,
-                'N_memory':10000,
+                'N_memory':1000,
                 'N_batch':2,
-                'UPDATE_FREQ':5,
+                'UPDATE_FREQ':3,
                 'RATE_INCREASE':1,
                 'LOSS_SCALE':2.0
                 }
@@ -94,4 +94,4 @@ PARAMS = {  'N_x': 84,
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-deepQ.save_animated_game(dir='../aws_runs/190129/1841')
+deepQ.save_animated_game(dir='../aws_runs/2019-02-07/1230')
