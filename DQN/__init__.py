@@ -88,6 +88,7 @@ class Qmemory:
                         - t_i: whether terminal
         """
         # check if memory is full or not
+        #print(self.mem_count, self.N_mem)
         if self.mem_count>=self.N_mem:
             # is full
             max_val = self.N_mem
@@ -95,6 +96,7 @@ class Qmemory:
             # isn't full - max index to look up to is the current count
             max_val = self.mem_count
 
+        #print(max_val, N_count, N_mem)
         # get random integeres between 0 and our max_val defined above
         rand_ints = np.random.randint(0,high=max_val,size=N_get)
 
@@ -136,7 +138,17 @@ class deepQ:
         self.HYPERPARAMS = HYPERPARAMS
         self.PARAMS   = PARAMS
 
-        self.N_action = self.env.action_space.n
+
+        self.N_action = self.env.action_space.n//2
+        # ^ this is specific to Pong, becuase half the actions have the same
+        # purose as the other actions.
+        # e.g actions 2 and 4 both move the paddle up
+        # 0: nothing, 1: nothing, 2:up, 3:down, 4:up, 5:down
+        # use instead x= 0,1,2, with mapping action = x+1,
+        # then x=0: nothing, x=1:up, x=2:down
+        # so we reduce the action space by half (from 6 to 3)
+        # and consequently action from Q value will be argmax(Q)+1
+        # n.b Q is vector of length N_action (i.e now 6//2 = 3)
 
         tf.reset_default_graph()
         self.graph = tf.get_default_graph() #tf.Graph()
@@ -178,6 +190,10 @@ class deepQ:
         tmp = tmp[1:-1:2,::2]
         frame_out[:,2:-2] = tmp.astype(np.uint8)
         return frame_out
+
+    def get_action(self,Q):
+        act = np.argmax(Q)+1
+        return act
 
     #---------------------------------------------------------------------------
     #---------------------------------------------------------------------------
@@ -407,11 +423,7 @@ class deepQ:
         return graph_vars
 
 
-
-
     #---------------------------------------------------------------------------
-
-
 
     def train(self, N_episodes):
         """train the DeepQ network
@@ -511,7 +523,7 @@ class deepQ:
                 # after this, decay epsilon exponentially according to total steps
                 # taken during training
                 if epi<self.HYPERPARAMS['EPI_START']:
-                    eps_tmp = 1.0
+                    eps_tmp = self.HYPERPARAMS['EPSILON_H']
                 else:
                     eps_tmp = self.HYPERPARAMS['EPSILON_L'] + (self.HYPERPARAMS['EPSILON_H'] - self.HYPERPARAMS['EPSILON_L'])*np.exp(-(steps_count*1.0)/self.HYPERPARAMS['EPS_DECAY'])
 
@@ -537,7 +549,8 @@ class deepQ:
                     # get action using the Q net, or at random
 
                     if np.random.uniform() < eps_tmp:
-                        action = np.asarray(self.env.action_space.sample())
+                        #action = np.asarray(self.env.action_space.sample())
+                        action = np.asarray(np.random.randint(self.N_action))
                         new_obs, reward, done, info = self.env.step(action)
 
                         av_acts.append(action)
@@ -561,14 +574,19 @@ class deepQ:
                         minQs.append(np.amin(Q))
 
                         # the action to be taken, is one that maximises Q
-                        action = np.argmax(Q)
+                        action = self.get_action(Q) #p.argmax(Q)
                         #print(action)
                         new_obs, reward, done, info = self.env.step(action)
                         av_acts.append(action)
+                        # print("Q        = ",Q)
+                        # print("Q action = ",self.get_action(Q))
 
 
                     # ----------------------------------------------------------
-
+                    # print("action taken = ",action)
+                    # print(eps_tmp)
+                    #print("reward = ",reward)
+                    # print('\n')
                     # process some of the outputs to make them behave nicely
                     # with the network and computational graph
 
@@ -604,9 +622,11 @@ class deepQ:
                     # frame repeated Nc times, which would be unrealistic - so do
                     # not add to memory.
                     if i>=(self.PARAMS['Nc']-1):
-                        if reward > 0.0:
+                        if reward > -0.1:
+                            #print("writing normal, ",reward)
                             memory_normal.write(current_phi, new_phi, action, reward, term_float)
                         else:
+                            #print("writing loss, ",reward)
                             memory_losses.write(current_phi, new_phi, action, reward, term_float)
 
                     # ----------------------------------------------------------
@@ -623,6 +643,9 @@ class deepQ:
 
                         N_batch_n = int(self.HYPERPARAMS['N_batch']*0.8)
                         N_batch_l = self.HYPERPARAMS['N_batch'] - N_batch_n
+
+                        #print(N_batch_n)
+                        #print(N_batch_l)
 
                         batch_n = memory_normal.get_batch(N_batch_n)
                         batch_l = memory_losses.get_batch(N_batch_l)
@@ -669,11 +692,17 @@ class deepQ:
                     current_phi = 1.0*new_phi
 
                     # if we are in the training period - add one to total number
-                    # of steps taken
+                    # of steps taken total over all episodes
                     if epi>self.HYPERPARAMS['EPI_START']:
                         steps_count+=1
 
+                    # step counter for each episode
                     steps_used+=1.0
+
+                    if (np.mod(steps_count,self.HYPERPARAMS['UPDATE_FREQ'])==0 and steps_count>0):
+                        #update the layers by running the update ops...
+                        #print("updating, ",self.HYPERPARAMS['UPDATE_FREQ'],np.mod(steps_count,self.HYPERPARAMS['UPDATE_FREQ']),steps_count)
+                        sess.run(graph_vars['update_target'])
 
                     # stop playing this game, if the move just performed was terminal
                     if (done):
@@ -728,7 +757,7 @@ class deepQ:
                             # use Q network graph to get Q_i, uses the online network
                             Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                             # the action to be taken, is one that maximises Q
-                            action = np.argmax(Q)
+                            action = self.get_action(Q) #np.argmax(Q)
                             new_obs, reward, done, info = self.env.step(action)
 
                             new_obs = self.preprocess(new_obs)
@@ -745,6 +774,7 @@ class deepQ:
 
                     writer.add_summary(summarynew, epi+1)
 
+
                     time_ep2 = time.time()
                     print(" on epsiode {a:d} ----- avg steps = {b:.1f} ------ avg reward = {c:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],c=reward_p_ep[out_count],d=eps_tmp,e=time_ep2-time_ep1))
                     time_ep1 = time.time()
@@ -755,13 +785,13 @@ class deepQ:
 
                 # if epsioside is a multiple of UPDATE_FREQ update the weights/biases
                 # of the target network to be those of the online network
-                if (np.mod(epi,self.HYPERPARAMS['UPDATE_FREQ'])==0):
-                    #update the layers by running the update ops...
-                    sess.run(graph_vars['update_target'])
-                    # sess.run([upd_c_k0,upd_c_b0,
-                    #           upd_c_k1,upd_c_b1,
-                    #           upd_FC_k0, upd_FC_b0,
-                    #           upd_k_out, upd_b_out])
+                # if (np.mod(epi,self.HYPERPARAMS['UPDATE_FREQ'])==0):
+                #     #update the layers by running the update ops...
+                #     sess.run(graph_vars['update_target'])
+                #     # sess.run([upd_c_k0,upd_c_b0,
+                #     #           upd_c_k1,upd_c_b1,
+                #     #           upd_FC_k0, upd_FC_b0,
+                #     #           upd_k_out, upd_b_out])
 
             #-------------------------------------------------------------------
 
@@ -809,7 +839,7 @@ class deepQ:
                 # use Q network graph to get Q_i, uses the online network
                 Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                 # the action to be taken, is one that maximises Q
-                action = np.argmax(Q)
+                action = self.get_action(Q) #np.argmax(Q)
                 new_obs, reward, done, info = self.env.step(action)
 
                 new_obs = self.preprocess(new_obs)
@@ -869,7 +899,7 @@ class deepQ:
                 # use Q network graph to get Q_i, uses the online network
                 Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                 # the action to be taken, is one that maximises Q
-                action = np.argmax(Q)
+                action = self.get_action(Q) #np.argmax(Q)
                 new_obs, reward, done, info = self.env.step(action)
 
                 # new_obs = self.preprocess(new_obs)

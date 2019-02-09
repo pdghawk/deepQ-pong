@@ -28,8 +28,8 @@ matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
 #sns.set()
 # ------------------------------------------------------------------------------
 #game = 'PongNoFrameskip-v4'
-#game = 'PongDeterministic-v4'
-game = 'Pong-v0'
+game = 'PongDeterministic-v4'
+#game = 'Pong-v0'
 
 # ------------------------------------------------------------------------------
 
@@ -58,8 +58,8 @@ N_squash = o2
 #
 # frame, reward, done, tmp = env.step(env.action_space.sample())
 # print(np.shape(frame))
-
-run_random_game = False
+print(6//2)
+run_random_game = True
 if run_random_game:
     frame = env.reset()
     ims = []
@@ -72,7 +72,9 @@ if run_random_game:
     plt.imshow(frame)
     plt.show()
     for i in np.arange(2000):
-        frame, reward, done, info = env.step(2) #env.step(env.action_space.sample())
+        Q=np.array([0,0,1])
+        action = np.argmax(Q)+1
+        frame, reward, done, info = env.step(action) #env.step(env.action_space.sample())
         #env.render()
         #img = env.render(mode='rgb_array')
         #env.close()
@@ -90,8 +92,9 @@ if run_random_game:
         plt.imshow(frame)
         plt.show()
         #img_list.append(frame.astype(np.uint8))
-        im = plt.imshow(frame, animated=True)
-        ims.append([im])
+
+        # im = plt.imshow(frame, animated=True)
+        # ims.append([im])
 
         #plt.show()
         # print(frame)
@@ -120,12 +123,16 @@ if run_random_game:
     # plt.colorbar()
     # plt.show()
 
-    ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
 
-    Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-    ani.save('random_game.mp4',writer=writer)
+    # ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
+    #
+    # Writer = animation.writers['ffmpeg']
+    # writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+    #
+    # ani.save('random_game.mp4',writer=writer)
+
+
 
     #plt.show()
 

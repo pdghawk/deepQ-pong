@@ -54,22 +54,41 @@ N_squash = o2
 #
 
 # 0.001 ok ish
+
 HYPERPARAMS = {
                 'ALPHA':1.0e-4,
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
-                'EPS_DECAY':100000.0,
+                'EPS_DECAY':60000.0,
                 'EPI_SWAP':10000,
-                'EPI_START':12,
-                'N_FILTER':16,
-                'N_FC':256,
-                'N_memory':100000,
-                'N_batch':32,
-                'UPDATE_FREQ':2,
+                'EPI_START':4,
+                'N_FILTER':1,
+                'N_FC':2,
+                'N_memory':80000,
+                'N_batch':2,
+                'UPDATE_FREQ':500,
                 'RATE_INCREASE':1,
                 'LOSS_SCALE':2.0
                 }
+
+
+# HYPERPARAMS = {
+#                 'ALPHA':1.0e-4,
+#                 'GAMMA': 0.99,
+#                 'EPSILON_H':1.00,
+#                 'EPSILON_L':0.02,
+#                 'EPS_DECAY':60000.0,
+#                 'EPI_SWAP':10000,
+#                 'EPI_START':12,
+#                 'N_FILTER':16,
+#                 'N_FC':256,
+#                 'N_memory':200000,
+#                 'N_batch':32,
+#                 'UPDATE_FREQ':2,
+#                 'RATE_INCREASE':1,
+#                 'LOSS_SCALE':2.0
+#                 }
 
 PARAMS = {  'N_x': 84,
             'N_y': 84,
@@ -81,10 +100,10 @@ PARAMS = {  'N_x': 84,
 
 
 
-N_episodes = 300
+N_episodes = 20
 results = []
 alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
-update_vec = np.array([1,3,5])
+update_vec = np.array([500,1000,5000])
 batch_vec = np.array([32,64,128])
 loss_scale_vec = np.array([1.0,2.0,4.0,10.0])
 decay_vec = np.array([5.0e3]) #,1.0e4,2.0e4])
