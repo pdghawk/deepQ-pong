@@ -191,9 +191,13 @@ class deepQ:
         frame_out[:,2:-2] = tmp.astype(np.uint8)
         return frame_out
 
-    def get_action(self,Q):
-        act = np.argmax(Q)+1
-        return act
+    # def get_action(self,Q):
+    #     act = np.argmax(Q)+1
+    #     return act
+
+    def action2step(self,act):
+        step=act+1
+        return step
 
     #---------------------------------------------------------------------------
     #---------------------------------------------------------------------------
@@ -211,33 +215,33 @@ class deepQ:
             reuseme: (bool) should the weights be reusable
 
         """
+        with tf.name_scope('Qnet'):
+            z = tf.reshape(obs, [-1,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc']])
+            #print(z.shape)
+            with tf.variable_scope(call_type+'conv_layer0',reuse=reuseme):
+                z_conv0 = tf.layers.Conv2D(filters = self.HYPERPARAMS['N_FILTER'],
+                                            kernel_size = (8,8),
+                                            strides = (4,4),
+                                            padding='valid',
+                                            activation=tf.nn.leaky_relu,
+                                            trainable=trainme,
+                                            kernel_initializer=tf.keras.initializers.he_normal())(z)
 
-        z = tf.reshape(obs, [-1,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc']])
-        #print(z.shape)
-        with tf.variable_scope(call_type+'conv_layer0',reuse=reuseme):
-            z_conv0 = tf.layers.Conv2D(filters = self.HYPERPARAMS['N_FILTER'],
-                                        kernel_size = (8,8),
-                                        strides = (4,4),
-                                        padding='valid',
-                                        activation=tf.nn.leaky_relu,
-                                        trainable=trainme,
-                                        kernel_initializer=tf.keras.initializers.he_normal())(z)
+            with tf.variable_scope(call_type+'conv_layer1',reuse=reuseme):
+                z_conv1 = tf.layers.Conv2D(filters = 2*self.HYPERPARAMS['N_FILTER'],
+                                            kernel_size = (4,4),
+                                            strides = (2,2),
+                                            padding='valid',
+                                            activation=tf.nn.leaky_relu,
+                                            trainable=trainme,
+                                            kernel_initializer=tf.keras.initializers.he_normal())(z_conv0)
+                z_conv1_flat = tf.reshape(z_conv1,[-1,self.PARAMS['N_squash']*self.PARAMS['N_squash']*(2*self.HYPERPARAMS['N_FILTER'])])
 
-        with tf.variable_scope(call_type+'conv_layer1',reuse=reuseme):
-            z_conv1 = tf.layers.Conv2D(filters = 2*self.HYPERPARAMS['N_FILTER'],
-                                        kernel_size = (4,4),
-                                        strides = (2,2),
-                                        padding='valid',
-                                        activation=tf.nn.leaky_relu,
-                                        trainable=trainme,
-                                        kernel_initializer=tf.keras.initializers.he_normal())(z_conv0)
-            z_conv1_flat = tf.reshape(z_conv1,[-1,self.PARAMS['N_squash']*self.PARAMS['N_squash']*(2*self.HYPERPARAMS['N_FILTER'])])
+            with tf.variable_scope(call_type+'FC_layer0',reuse=reuseme):
+                z_FC0 =  tf.layers.Dense(units=self.HYPERPARAMS['N_FC'],trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_conv1_flat)
 
-        with tf.variable_scope(call_type+'FC_layer0',reuse=reuseme):
-            z_FC0 =  tf.layers.Dense(units=self.HYPERPARAMS['N_FC'],trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_conv1_flat)
-
-        with tf.variable_scope(call_type+'layer_out',reuse=reuseme):
-            z_out = tf.layers.Dense(units=self.N_action,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_FC0)
+            with tf.variable_scope(call_type+'layer_out',reuse=reuseme):
+                z_out = tf.layers.Dense(units=self.N_action,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_FC0)
 
         return z_out
 
@@ -256,16 +260,18 @@ class deepQ:
         """
 
         # TODO: tf.group to combine operators...????
-        with tf.variable_scope('online_' + layer,reuse=True):
-            k_online = tf.get_variable('kernel')
-            b_online = tf.get_variable('bias')
+        with tf.name_scope('get_online_wieghts'):
+            with tf.variable_scope('online_' + layer,reuse=True):
+                k_online = tf.get_variable('kernel')
+                b_online = tf.get_variable('bias')
 
-        with tf.variable_scope('target_' + layer,reuse=True):
-            k_target = tf.get_variable('kernel')
-            b_target = tf.get_variable('bias')
-
-        upd_k = tf.assign(k_target,k_online)
-        upd_b = tf.assign(b_target,b_online)
+        with tf.name_scope('get_target_weights'):
+            with tf.variable_scope('target_' + layer,reuse=True):
+                k_target = tf.get_variable('kernel')
+                b_target = tf.get_variable('bias')
+        with tf.name_scope('assign_new_target_weights'):
+            upd_k = tf.assign(k_target,k_online)
+            upd_b = tf.assign(b_target,b_online)
         return upd_k,upd_b
 
     #---------------------------------------------------------------------------
@@ -316,24 +322,26 @@ class deepQ:
             t_i_   = tf.placeholder(shape=[None,1],dtype=tf.float32)
 
             # ------------------------------------------------------------------
-            Q_i_ = self.Qnet(phi_i_,'online_',True,False)
-            print("Q_i_ shape         = ",Q_i_.shape)
+            with tf.name_scope('Q_i_online'):
+                Q_i_ = self.Qnet(phi_i_,'online_',True,False)
+                #print("Q_i_ shape         = ",Q_i_.shape)
 
-            # convert actions that were taken into onehot format
-            a_list = tf.reshape(tf.cast(a_i_,tf.int32),[-1])
-            print("a_list shape = ",a_list.shape)
+            with tf.name_scope('Value_function_i_online'):
+                # convert actions that were taken into onehot format
+                a_list = tf.reshape(tf.cast(a_i_,tf.int32),[-1])
+                print("a_list shape = ",a_list.shape)
 
-            a_onehot = tf.one_hot(a_list, self.N_action)
-            print(a_onehot.shape)
+                a_onehot = tf.one_hot(a_list, self.N_action)
+                print(a_onehot.shape)
 
-            # now use the onehot format actions to select the Q_i's that are actually
-            # obtained by taking action a_i. n.b Qnet returns a value for Q for all actions
-            # but we only want to know Q for the action taken
+                # now use the onehot format actions to select the Q_i's that are actually
+                # obtained by taking action a_i. n.b Qnet returns a value for Q for all actions
+                # but we only want to know Q for the action taken
 
-            V_i_tmp = tf.multiply(a_onehot,Q_i_)
-            print(V_i_tmp.shape)
-            V_i_ = tf.reduce_sum(V_i_tmp, axis=1)
-            print(V_i_.shape)
+                V_i_tmp = tf.multiply(a_onehot,Q_i_)
+                print(V_i_tmp.shape)
+                V_i_ = tf.reduce_sum(V_i_tmp, axis=1)
+                print(V_i_.shape)
 
 
             # ------------------------------------------------------------------
@@ -343,10 +351,10 @@ class deepQ:
 
             # this is the same network as for Q_i_ - we set reuse=True
             # (it is also trainable)
-
-            Qj_online_ = self.Qnet(phi_j_,'online_',True,True)
-            Qj_online_inds = tf.argmax(Qj_online_,axis=1)
-            Qj_onehot_inds = tf.one_hot(Qj_online_inds, self.N_action)
+            with tf.name_scope('Qj_online'):
+                Qj_online_ = self.Qnet(phi_j_,'online_',True,True)
+                Qj_online_inds = tf.argmax(Qj_online_,axis=1)
+                Qj_onehot_inds = tf.one_hot(Qj_online_inds, self.N_action)
 
             # ------------------------------------------------------------------
 
@@ -354,23 +362,26 @@ class deepQ:
             # it is not trainable. Instead we train the online network and
             # set the weights/biases of the layers in the target network to be the
             # same as those in the online network every so many games.
-
-            Q_j_ = self.Qnet(phi_j_,'target_',False,False)
+            with tf.name_scope('Qj_target'):
+                Q_j_ = self.Qnet(phi_j_,'target_',False,False)
 
             # now only take values of Q (target) for state j, using action that
             # the online network would predict
-            V_j_ = tf.reduce_sum(tf.multiply(Qj_onehot_inds,Q_j_),axis=1)
+            with tf.name_scope('value_function_j'):
+                V_j_ = tf.reduce_sum(tf.multiply(Qj_onehot_inds,Q_j_),axis=1)
 
             # ------------------------------------------------------------------
             # get the future discounted reward
-            y_          = tf.add( tf.squeeze(r_i_) , self.HYPERPARAMS['GAMMA']*tf.multiply(tf.squeeze(t_i_),tf.squeeze(V_j_)))
+            with tf.name_scope('discounted_reward'):
+                y_          = tf.add( tf.squeeze(r_i_) , self.HYPERPARAMS['GAMMA']*tf.multiply(tf.squeeze(t_i_),tf.squeeze(V_j_)))
 
             print("y shape = ",y_.shape)
             print("r_i_ shape = ",tf.squeeze(r_i_).shape)
 
             # difference between value function (future discounted) and the value
             # funtion on state i
-            x_    = tf.subtract( y_, V_i_  )
+            with tf.name_scope('discount_take_value'):
+                x_    = tf.subtract( y_, V_i_  )
 
             print("x_ shape = ",x_.shape)
 
@@ -378,23 +389,25 @@ class deepQ:
             # define the loss, create an optimizer op, and a training op
 
             # use a Pseudo-Huber loss
-            loss_scale = self.HYPERPARAMS['LOSS_SCALE'] # how steep loss is for large values
-            loss_ = tf.reduce_mean( loss_scale*(tf.sqrt(1.0+(1.0/loss_scale)**2*tf.multiply(x_,x_)) - 1.0) )
+            with tf.name_scope('loss'):
+                loss_scale = self.HYPERPARAMS['LOSS_SCALE'] # how steep loss is for large values
+                loss_ = tf.reduce_mean( loss_scale*(tf.sqrt(1.0+(1.0/loss_scale)**2*tf.multiply(x_,x_)) - 1.0) )
 
-            optimizer    = tf.train.RMSPropOptimizer(self.HYPERPARAMS['ALPHA'])
-
-            train_op     = optimizer.minimize(loss_)
+            with tf.name_scope('optimizer'):
+                optimizer    = tf.train.RMSPropOptimizer(self.HYPERPARAMS['ALPHA'])
+                train_op     = optimizer.minimize(loss_)
 
             # ------------------------------------------------------------------
             # update the parameters of the target network, by cloning those from
             # online Q network. This will only be sess.run'ed every C steps
 
-            upd_c_k0,upd_c_b0   = self.update_layer('conv_layer0/conv2d')
-            upd_c_k1,upd_c_b1   = self.update_layer('conv_layer1/conv2d')
-            upd_FC_k0,upd_FC_b0 = self.update_layer('FC_layer0/dense')
-            upd_k_out,upd_b_out = self.update_layer('layer_out/dense')
+            with tf.name_scope('target_updates'):
+                upd_c_k0,upd_c_b0   = self.update_layer('conv_layer0/conv2d')
+                upd_c_k1,upd_c_b1   = self.update_layer('conv_layer1/conv2d')
+                upd_FC_k0,upd_FC_b0 = self.update_layer('FC_layer0/dense')
+                upd_k_out,upd_b_out = self.update_layer('layer_out/dense')
 
-            update_target = tf.group(upd_c_k0, upd_c_b0, upd_c_k1, upd_c_b1, upd_FC_k0, upd_FC_b0, upd_k_out, upd_b_out)
+                update_target = tf.group(upd_c_k0, upd_c_b0, upd_c_k1, upd_c_b1, upd_FC_k0, upd_FC_b0, upd_k_out, upd_b_out)
 
             # ------------------------------------------------------------------
             # create some tenorboard outputs for real-time analysis
@@ -551,9 +564,11 @@ class deepQ:
                     if np.random.uniform() < eps_tmp:
                         #action = np.asarray(self.env.action_space.sample())
                         action = np.asarray(np.random.randint(self.N_action))
-                        new_obs, reward, done, info = self.env.step(action)
+                        new_obs, reward, done, info = self.env.step(self.action2step(action))
 
                         av_acts.append(action)
+                        # print("random action = ",action)
+                        # print("random step   = ",self.action2step(action))
                     else:
                         # feed data into the session graph to get Q as a numpy array
                         # only phi_i is actual data
@@ -574,12 +589,13 @@ class deepQ:
                         minQs.append(np.amin(Q))
 
                         # the action to be taken, is one that maximises Q
-                        action = self.get_action(Q) #p.argmax(Q)
+                        action = np.argmax(Q)
                         #print(action)
-                        new_obs, reward, done, info = self.env.step(action)
+                        new_obs, reward, done, info = self.env.step(self.action2step(action))
                         av_acts.append(action)
                         # print("Q        = ",Q)
-                        # print("Q action = ",self.get_action(Q))
+                        # print("Q action = ",action)
+                        # print("step     = ",self.action2step(action))
 
 
                     # ----------------------------------------------------------
@@ -732,7 +748,9 @@ class deepQ:
                     summarynew = tf.Summary(value=[tf.Summary.Value(tag='avg steps', simple_value=steps_p_ep[out_count])])
                     summarynew.value.add(tag='avg reward', simple_value=reward_p_ep[out_count])
                     summarynew.value.add(tag='avg max Q', simple_value=max_Q_p_ep[out_count])
+                    summarynew.value.add(tag='avg min Q', simple_value=min_Q_p_ep[out_count])
                     summarynew.value.add(tag='avg loss', simple_value=loss_p_ep[out_count])
+                    summarynew.value.add(tag='avg action',simple_value=av_action_p_ep[out_count])
                     summarynew.value.add(tag='epsilon', simple_value=eps_tmp)
 
 
@@ -757,8 +775,8 @@ class deepQ:
                             # use Q network graph to get Q_i, uses the online network
                             Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                             # the action to be taken, is one that maximises Q
-                            action = self.get_action(Q) #np.argmax(Q)
-                            new_obs, reward, done, info = self.env.step(action)
+                            action = np.argmax(Q)
+                            new_obs, reward, done, info = self.env.step(self.action2step(action))
 
                             new_obs = self.preprocess(new_obs)
                             new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
@@ -839,8 +857,8 @@ class deepQ:
                 # use Q network graph to get Q_i, uses the online network
                 Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                 # the action to be taken, is one that maximises Q
-                action = self.get_action(Q) #np.argmax(Q)
-                new_obs, reward, done, info = self.env.step(action)
+                action = np.argmax(Q)
+                new_obs, reward, done, info = self.env.step(self.action2step(action))
 
                 new_obs = self.preprocess(new_obs)
                 new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
@@ -899,8 +917,8 @@ class deepQ:
                 # use Q network graph to get Q_i, uses the online network
                 Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
                 # the action to be taken, is one that maximises Q
-                action = self.get_action(Q) #np.argmax(Q)
-                new_obs, reward, done, info = self.env.step(action)
+                action = np.argmax(Q)
+                new_obs, reward, done, info = self.env.step(self.action2step(action))
 
                 # new_obs = self.preprocess(new_obs)
                 # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
