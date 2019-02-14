@@ -215,10 +215,10 @@ class deepQ:
             reuseme: (bool) should the weights be reusable
 
         """
-        with tf.name_scope('Qnet'):
+        with tf.variable_scope(call_type):
             z = tf.reshape(obs, [-1,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc']])
             #print(z.shape)
-            with tf.variable_scope(call_type+'conv_layer0',reuse=reuseme):
+            with tf.variable_scope('conv_layer0',reuse=reuseme):
                 z_conv0 = tf.layers.Conv2D(filters = self.HYPERPARAMS['N_FILTER'],
                                             kernel_size = (8,8),
                                             strides = (4,4),
@@ -227,7 +227,7 @@ class deepQ:
                                             trainable=trainme,
                                             kernel_initializer=tf.keras.initializers.he_normal())(z)
 
-            with tf.variable_scope(call_type+'conv_layer1',reuse=reuseme):
+            with tf.variable_scope('conv_layer1',reuse=reuseme):
                 z_conv1 = tf.layers.Conv2D(filters = 2*self.HYPERPARAMS['N_FILTER'],
                                             kernel_size = (4,4),
                                             strides = (2,2),
@@ -237,10 +237,10 @@ class deepQ:
                                             kernel_initializer=tf.keras.initializers.he_normal())(z_conv0)
                 z_conv1_flat = tf.reshape(z_conv1,[-1,self.PARAMS['N_squash']*self.PARAMS['N_squash']*(2*self.HYPERPARAMS['N_FILTER'])])
 
-            with tf.variable_scope(call_type+'FC_layer0',reuse=reuseme):
+            with tf.variable_scope('FC_layer0',reuse=reuseme):
                 z_FC0 =  tf.layers.Dense(units=self.HYPERPARAMS['N_FC'],trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_conv1_flat)
 
-            with tf.variable_scope(call_type+'layer_out',reuse=reuseme):
+            with tf.variable_scope('layer_out',reuse=reuseme):
                 z_out = tf.layers.Dense(units=self.N_action,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_FC0)
 
         return z_out
@@ -261,12 +261,12 @@ class deepQ:
 
         # TODO: tf.group to combine operators...????
         with tf.name_scope('get_online_wieghts'):
-            with tf.variable_scope('online_' + layer,reuse=True):
+            with tf.variable_scope('online/' + layer,reuse=True):
                 k_online = tf.get_variable('kernel')
                 b_online = tf.get_variable('bias')
 
         with tf.name_scope('get_target_weights'):
-            with tf.variable_scope('target_' + layer,reuse=True):
+            with tf.variable_scope('target/' + layer,reuse=True):
                 k_target = tf.get_variable('kernel')
                 b_target = tf.get_variable('bias')
         with tf.name_scope('assign_new_target_weights'):
@@ -323,7 +323,7 @@ class deepQ:
 
             # ------------------------------------------------------------------
             with tf.name_scope('Q_i_online'):
-                Q_i_ = self.Qnet(phi_i_,'online_',True,False)
+                Q_i_ = self.Qnet(phi_i_,'online',True,False)
                 #print("Q_i_ shape         = ",Q_i_.shape)
 
             with tf.name_scope('Value_function_i_online'):
@@ -352,7 +352,7 @@ class deepQ:
             # this is the same network as for Q_i_ - we set reuse=True
             # (it is also trainable)
             with tf.name_scope('Qj_online'):
-                Qj_online_ = self.Qnet(phi_j_,'online_',True,True)
+                Qj_online_ = self.Qnet(phi_j_,'online',True,True)
                 Qj_online_inds = tf.argmax(Qj_online_,axis=1)
                 Qj_onehot_inds = tf.one_hot(Qj_online_inds, self.N_action)
 
@@ -363,7 +363,7 @@ class deepQ:
             # set the weights/biases of the layers in the target network to be the
             # same as those in the online network every so many games.
             with tf.name_scope('Qj_target'):
-                Q_j_ = self.Qnet(phi_j_,'target_',False,False)
+                Q_j_ = self.Qnet(phi_j_,'target',False,False)
 
             # now only take values of Q (target) for state j, using action that
             # the online network would predict
