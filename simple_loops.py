@@ -75,13 +75,13 @@ N_squash = o2
 
 
 HYPERPARAMS = {
-                'ALPHA':1.0e-4,
+                'ALPHA':1.5e-4,
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
                 'EPS_DECAY':60000.0,
                 'EPI_SWAP':10000,
-                'EPI_START':4,
+                'EPI_START':1,
                 'N_FILTER':1,
                 'N_FC':2,
                 'N_memory':80000,
@@ -96,13 +96,13 @@ PARAMS = {  'N_x': 84,
             'N_y': 84,
             'Nc': 4,
             'N_squash':N_squash,
-            'OUTPUT_STEP': 5,
+            'OUTPUT_STEP': 2,
             'MAX_STEPS': 20000
             }
 
 
 
-N_episodes = 300
+N_episodes = 10
 results = []
 alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
 update_vec = np.array([5000,10000])

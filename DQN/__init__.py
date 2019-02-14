@@ -3,6 +3,7 @@ from tensorflow import keras
 from keras import backend as K
 import numpy as np
 import time
+import os
 
 import matplotlib #.pyplot as plt
 matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
@@ -190,10 +191,6 @@ class deepQ:
         tmp = tmp[1:-1:2,::2]
         frame_out[:,2:-2] = tmp.astype(np.uint8)
         return frame_out
-
-    # def get_action(self,Q):
-    #     act = np.argmax(Q)+1
-    #     return act
 
     def action2step(self,act):
         step=act+1
@@ -465,6 +462,8 @@ class deepQ:
         # ----------------- now use the graph above as the session -------------
         with tf.Session(graph=self.graph) as sess:
             #K.set_session(sess)
+
+
             sess.run(graph_vars['graph_init'])
             sess.run(graph_vars['graph_local_init'])
 
@@ -631,7 +630,7 @@ class deepQ:
                     else:
                         term_float = np.array(reward > -0.1).astype(np.float32)
 
-                    print(reward,term_float)
+                    #print(reward,term_float)
 
                     tot_reward+=reward
 
@@ -702,6 +701,10 @@ class deepQ:
 
                         # APPLY GRADIENT DESCENT for batch
                         # only perform if episopde is > EPI_START
+                        # if(epi==self.HYPERPARAMS['EPI_START']):
+                        #     graph_vars['train_op'].run(feed_dict=feed_dict_batch,options=run_options,run_metadata=run_metadata)
+                        #     sess.run(tmp_loss,graph_vars['train_op'],)
+
                         if(epi>self.HYPERPARAMS['EPI_START']):
                             graph_vars['train_op'].run(feed_dict=feed_dict_batch)
 
@@ -796,8 +799,19 @@ class deepQ:
                     avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
                     summarynew.value.add(tag='avg validation reward', simple_value=avg_valid_reward)
 
-                    writer.add_summary(summarynew, epi+1)
 
+                    print("wirting summary")
+                    writer.add_summary(summarynew, epi+1)
+                    # writer.flush()
+                    if epi<self.PARAMS['OUTPUT_STEP']:
+                        print("getting meta data for loss (not update or train)")
+                        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                        run_metadata = tf.RunMetadata()
+                        sess.run(graph_vars['loss_'],feed_dict=tmp_feed_dict,options=run_options,run_metadata=run_metadata)
+                        writer.add_run_metadata(run_metadata, 'epi-%d'%epi)
+                    # else:
+                    #     writer.add_summary(summarynew, epi+1)
+                    writer.flush()
 
                     time_ep2 = time.time()
                     print(" on epsiode {a:d} ----- avg steps = {b:.1f} ------ avg reward = {c:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],c=reward_p_ep[out_count],d=eps_tmp,e=time_ep2-time_ep1))
@@ -887,7 +901,7 @@ class deepQ:
 
         return None
 
-    def save_animated_game(self,dir='..'):
+    def save_animated_game_mp4(self,dir='..'):
         """save a game to mp4 format
 
         this function loads game from checkpoint, so make sure you already ran
@@ -944,4 +958,64 @@ class deepQ:
 
             ani.save('./../figs/'+self.params_text+'.mp4',writer=writer)
 
+        return None
+
+    def save_animated_game_array(self,dir='..'):
+        """save a game to mp4 format
+
+        this function loads game from checkpoint, so make sure you already ran
+        a game with the hyperparams you want to check.
+
+        """
+        save_loc    = "./"+dir+"/ckpts"+"/"+self.params_text #+".ckpt"
+
+        graph_vars = self.make_graph()
+
+        #saver = tf.train.Saver()
+        with tf.Session(graph=self.graph) as sess:
+            new_saver = tf.train.import_meta_graph(save_loc+'.meta')
+            #new_saver.restore(sess, save_loc+'.data-00000-of-00001')
+            new_saver.restore(sess,tf.train.latest_checkpoint("./../ckpts/"))
+            #saver.restore(sess,save_loc)
+
+            ims = []
+            # fig = plt.figure()
+
+            current_obs = self.env.reset()
+            current_obs = self.preprocess(current_obs)
+            current_phi = np.tile( current_obs[:,:,np.newaxis], (1,1,self.PARAMS['Nc']) )
+            valid_steps = 0
+
+            for i in np.arange(self.PARAMS['MAX_STEPS']):
+                tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                graph_vars['phi_j_']:current_phi[np.newaxis,:,:,:]/255.0,
+                                graph_vars['a_i_']:np.zeros((1,1)),
+                                graph_vars['r_i_']:np.zeros((1,1)),
+                                graph_vars['t_i_']:np.zeros((1,1))}
+
+                # use Q network graph to get Q_i, uses the online network
+                Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
+                # the action to be taken, is one that maximises Q
+                action = np.argmax(Q)
+                new_obs, reward, done, info = self.env.step(self.action2step(action))
+
+                # new_obs = self.preprocess(new_obs)
+                # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
+                # current_phi = 1.0*new_phi
+
+
+                # im = plt.imshow(new_obs, animated=True)
+                ims.append(new_obs)
+
+                if (done):
+                    break
+            self.env.close()
+            print("shape = ", np.shape(np.asarray(ims)))
+            print(np.asarray(ims).dtype)
+            # note array saved in format: frame number,x,y,color
+            # if os.path.isdir('./../game_arrays/'):
+            #     np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
+            # else:
+            #     os.mkdir('./../game_arrays/')
+            #     np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
         return None
