@@ -14,37 +14,18 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-import time
-
-import gym
-
-import DQN
 
 import matplotlib #.pyplot as plt
-matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
+matplotlib.use('Agg') # this makes the fgire in focus rather than temrinal
 import matplotlib.pyplot as plt
 
+import gym
+import DQN
 
-import seaborn as sns
-
-# ------------------------------------------------------------------------------
-
-matplotlib.rcParams['lines.linewidth']  = 1.5
-matplotlib.rcParams['axes.linewidth']   = 1.5
-matplotlib.rcParams['font.weight']      = 'bold'
-matplotlib.rcParams['axes.labelweight'] = 'bold'
-matplotlib.rcParams['font.size']        = 10
-matplotlib.rcParams['legend.frameon']   = False
-matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
-#sns.set()
-# ------------------------------------------------------------------------------
 
 game = 'PongDeterministic-v4'
 
 # ------------------------------------------------------------------------------
-
-# optional bit of code to check the env working visually
-
 
 env=gym.make(game)
 
@@ -64,25 +45,8 @@ print(o2)
 N_squash = o2
 
 print(N_squash)
-
 # ------------------------------------------------------------------------------
 
-# HYPERPARAMS = {
-#                 'ALPHA':2.5e-4,
-#                 'GAMMA': 0.99,
-#                 'EPSILON_H':1.00,
-#                 'EPSILON_L':0.02,
-#                 'EPS_DECAY':80000.0,
-#                 'EPI_SWAP':10000,
-#                 'EPI_START':30,
-#                 'N_FILTER':16,
-#                 'N_FC':256,
-#                 'N_memory':250000,
-#                 'N_batch':32,
-#                 'UPDATE_FREQ':7000,
-#                 'RATE_INCREASE':1,
-#                 'LOSS_SCALE':2.0
-#                 }
 
 HYPERPARAMS = {
                 'ALPHA':1.5e-4,
@@ -113,4 +77,4 @@ PARAMS = {  'N_x': 84,
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-deepQ.save_game_array() #dir='../aws_runs/2019-02-13/1603')
+deepQ.mp4_from_array()

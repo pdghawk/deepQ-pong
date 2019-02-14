@@ -960,7 +960,7 @@ class deepQ:
 
         return None
 
-    def save_animated_game_array(self,dir='..'):
+    def save_game_array(self,dir='..'):
         """save a game to mp4 format
 
         this function loads game from checkpoint, so make sure you already ran
@@ -1003,19 +1003,60 @@ class deepQ:
                 # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
                 # current_phi = 1.0*new_phi
 
+                # plt.imshow(new_obs[::2,::2,:])
+                # plt.show()
 
                 # im = plt.imshow(new_obs, animated=True)
-                ims.append(new_obs)
+                if np.mod(i,2)==0:
+                    ims.append(new_obs[::2,::2,:])
 
                 if (done):
                     break
             self.env.close()
+
             print("shape = ", np.shape(np.asarray(ims)))
             print(np.asarray(ims).dtype)
-            # note array saved in format: frame number,x,y,color
-            # if os.path.isdir('./../game_arrays/'):
-            #     np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
-            # else:
-            #     os.mkdir('./../game_arrays/')
-            #     np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
+
+            #note array saved in format: frame number,x,y,color
+            if os.path.isdir('./../game_arrays/'):
+                np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
+            else:
+                os.mkdir('./../game_arrays/')
+                np.save('./../game_arrays/'+self.params_text,np.asarray(ims))
+
+
+        return None
+
+    def mp4_from_array(self,dir='..'):
+        """save a game to mp4 format
+
+        this function loads game from checkpoint, so make sure you already ran
+        a game with the hyperparams you want to check.
+
+        """
+        save_loc    = "./"+dir+"/game_arrays"+"/"+self.params_text #+".ckpt"
+        game_arr    = np.load(save_loc+'.npy')
+
+        #saver = tf.train.Saver()
+        with tf.Session(graph=self.graph) as sess:
+
+            ims = []
+            fig = plt.figure()
+
+            print(np.shape(game_arr))
+            print(len(game_arr))
+            for i in np.arange(len(game_arr)):
+
+
+                im = plt.imshow(game_arr[i,:,:,:], animated=True)
+                ims.append([im])
+
+            self.env.close()
+            ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
+
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+
+            ani.save('./../figs/'+self.params_text+'.mp4',writer=writer)
+
         return None
