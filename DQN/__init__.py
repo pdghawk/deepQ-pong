@@ -566,7 +566,7 @@ class deepQ:
                         action = np.asarray(np.random.randint(self.N_action))
                         new_obs, reward, done, info = self.env.step(self.action2step(action))
 
-                        av_acts.append(action)
+                        #av_acts.append(action)
                         # print("random action = ",action)
                         # print("random step   = ",self.action2step(action))
                     else:
@@ -624,8 +624,14 @@ class deepQ:
                     # of game, to a float (number). we want it to be 0.0 when it is
                     # the final move - so we need the opposite of normal conversion
                     # of bool->float - so use:   (not done)
-                    term_float = np.array(not done)
-                    term_float = term_float.astype(np.float32)
+
+                    if not self.HYPERPARAMS['TERMINAL_POINTS']:
+                        term_float = np.array(not done)
+                        term_float = term_float.astype(np.float32)
+                    else:
+                        term_float = np.array(reward > -0.1).astype(np.float32)
+
+                    print(reward,term_float)
 
                     tot_reward+=reward
 
@@ -757,7 +763,7 @@ class deepQ:
                     # ALSO: at the output points, make a validation check
                     # run a game with no random moves: what is score
                     avg_valid_reward = 0
-                    N_valid = 10
+                    N_valid = 3
                     for j in np.arange(N_valid):
                         valid_reward = 0.0
                         current_obs = self.env.reset()
