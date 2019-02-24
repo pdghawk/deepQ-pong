@@ -160,9 +160,10 @@ class deepQ:
         nfc_txt   = f"NFC_{HYPERPARAMS['N_FC']:d}_"
         nfilt_txt = f"Nfilter_{HYPERPARAMS['N_FILTER']:d}_"
         mem_txt   = f"mem_{HYPERPARAMS['N_memory']:d}_"
-        batch_txt = f"batch_{HYPERPARAMS['N_batch']:d}"
+        batch_txt = f"batch_{HYPERPARAMS['N_batch']:d}_"
+        term_txt  = f"terminal_{HYPERPARAMS['TERMINAL_POINTS']:d}"
         self.params_text = alpha_txt+upd_txt+decay_txt+nfc_txt+\
-                           nfilt_txt+mem_txt+batch_txt
+                           nfilt_txt+mem_txt+batch_txt+term_txt
         #self.params_text = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_NFC_{HYPERPARAMS['N_FC']:d}_NFilter_{HYPERPARAMS['N_FILTER']:d}_mem_{HYPERPARAMS['N_memory']:d}_batch_{HYPERPARAMS['N_batch']:d}"
 
         print("\n==========================================================")
@@ -940,9 +941,9 @@ class deepQ:
                 action = np.argmax(Q)
                 new_obs, reward, done, info = self.env.step(self.action2step(action))
 
-                # new_obs = self.preprocess(new_obs)
-                # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
-                # current_phi = 1.0*new_phi
+                new_obs = self.preprocess(new_obs)
+                new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
+                current_phi = 1.0*new_phi
 
 
                 im = plt.imshow(new_obs, animated=True)
@@ -985,6 +986,7 @@ class deepQ:
             current_obs = self.preprocess(current_obs)
             current_phi = np.tile( current_obs[:,:,np.newaxis], (1,1,self.PARAMS['Nc']) )
             valid_steps = 0
+            tot_reward = 0
 
             for i in np.arange(self.PARAMS['MAX_STEPS']):
                 tmp_feed_dict = {graph_vars['phi_i_']:current_phi[np.newaxis,:,:,:]/255.0,
@@ -999,10 +1001,11 @@ class deepQ:
                 action = np.argmax(Q)
                 new_obs, reward, done, info = self.env.step(self.action2step(action))
 
-                # new_obs = self.preprocess(new_obs)
-                # new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
-                # current_phi = 1.0*new_phi
+                new_obs2 = self.preprocess(new_obs)
+                new_phi = np.concatenate((current_phi[:,:,1:],new_obs2[:,:,np.newaxis]), axis=2)
+                current_phi = 1.0*new_phi
 
+                tot_reward+= reward
                 # plt.imshow(new_obs[::2,::2,:])
                 # plt.show()
 
@@ -1016,6 +1019,8 @@ class deepQ:
 
             print("shape = ", np.shape(np.asarray(ims)))
             print(np.asarray(ims).dtype)
+
+            print("game_score = ",tot_reward)
 
             #note array saved in format: frame number,x,y,color
             if os.path.isdir('./../game_arrays/'):
@@ -1037,6 +1042,7 @@ class deepQ:
         save_loc    = "./"+dir+"/game_arrays"+"/"+self.params_text #+".ckpt"
         game_arr    = np.load(save_loc+'.npy')
 
+        print(save_loc)
         #saver = tf.train.Saver()
         with tf.Session(graph=self.graph) as sess:
 
