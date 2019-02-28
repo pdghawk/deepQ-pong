@@ -52,7 +52,7 @@ HYPERPARAMS = {
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
-                'EPS_DECAY':80000.0,
+                'EPS_DECAY':70000.0,
                 'EPI_SWAP':10000,
                 'EPI_START':30,
                 'N_FILTER':16,
@@ -94,4 +94,4 @@ PARAMS = {  'N_x': 84,
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-deepQ.mp4_from_array('../aws_runs/2019-02-23/1446')
+deepQ.mp4_from_array('../aws_runs/2019-02-27/1326')

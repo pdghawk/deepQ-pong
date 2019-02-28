@@ -54,20 +54,20 @@ N_squash = o2
 #
 
 # 0.001 ok ish
-
+#
 HYPERPARAMS = {
                 'ALPHA':2.5e-4,
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
-                'EPS_DECAY':80000.0,
+                'EPS_DECAY':70000.0,
                 'EPI_SWAP':10000,
                 'EPI_START':30,
                 'N_FILTER':16,
                 'N_FC':256,
                 'N_memory':250000,
                 'N_batch':32,
-                'UPDATE_FREQ':5000,
+                'UPDATE_FREQ':7000,
                 'TERMINAL_POINTS':True,
                 'RATE_INCREASE':1,
                 'LOSS_SCALE':2.0
@@ -81,11 +81,11 @@ HYPERPARAMS = {
 #                 'EPSILON_L':0.02,
 #                 'EPS_DECAY':60000.0,
 #                 'EPI_SWAP':10000,
-#                 'EPI_START':1,
+#                 'EPI_START':10,
 #                 'N_FILTER':1,
 #                 'N_FC':2,
 #                 'N_memory':80000,
-#                 'N_batch':2,
+#                 'N_batch':10,
 #                 'UPDATE_FREQ':500,
 #                 'TERMINAL_POINTS':True,
 #                 'RATE_INCREASE':1,

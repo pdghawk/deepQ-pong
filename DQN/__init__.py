@@ -213,6 +213,9 @@ class deepQ:
             reuseme: (bool) should the weights be reusable
 
         """
+        # TODO: different initializations (glorot perhaps)
+        # also maybe try batch norm : but n.b would need to share the variables
+        # of those layers from online to target
         with tf.variable_scope(call_type):
             z = tf.reshape(obs, [-1,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc']])
             #print(z.shape)
@@ -486,10 +489,12 @@ class deepQ:
             # the memory would then contain fewer losing moves to learn from. Which
             # could cause the model to 'forget' how to play.
 
-            N_mem_normal = int(0.90*self.HYPERPARAMS['N_memory'])
-            N_mem_losses = self.HYPERPARAMS['N_memory'] - N_mem_normal #int(0.05*self.HYPERPARAMS['N_memory'])
+            N_mem_normal = int(0.80*self.HYPERPARAMS['N_memory'])
+            N_mem_losses = int(0.10*self.HYPERPARAMS['N_memory']) # - N_mem_normal #int(0.05*self.HYPERPARAMS['N_memory'])
+            N_mem_wins   = self.HYPERPARAMS['N_memory'] - N_mem_normal - N_mem_losses
 
             memory_normal = Qmemory(N_mem_normal,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
+            memory_wins   = Qmemory(N_mem_wins  ,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
             memory_losses = Qmemory(N_mem_losses,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
 
             # ------------------------------------------------------------------
@@ -644,7 +649,10 @@ class deepQ:
                     # frame repeated Nc times, which would be unrealistic - so do
                     # not add to memory.
                     if i>=(self.PARAMS['Nc']-1):
-                        if reward > -0.1:
+                        if reward > 0.1:
+                            #print("writing win, ",reward)
+                            memory_wins.write(current_phi, new_phi, action, reward, term_float)
+                        elif reward > -0.1:
                             #print("writing normal, ",reward)
                             memory_normal.write(current_phi, new_phi, action, reward, term_float)
                         else:
@@ -663,24 +671,25 @@ class deepQ:
                         # define sizes of batches for the 'normal' memory, and
                         # batch size for the 'losses' memory.
 
-                        N_batch_n = int(self.HYPERPARAMS['N_batch']*0.8)
-                        N_batch_l = self.HYPERPARAMS['N_batch'] - N_batch_n
+                        N_batch_n = int(0.7*self.HYPERPARAMS['N_batch'])
+                        N_batch_l = int(0.2*self.HYPERPARAMS['N_batch'])
+                        N_batch_w = self.HYPERPARAMS['N_batch'] - N_batch_n - N_batch_l
 
                         #print(N_batch_n)
                         #print(N_batch_l)
 
                         batch_n = memory_normal.get_batch(N_batch_n)
                         batch_l = memory_losses.get_batch(N_batch_l)
-
+                        batch_w = memory_losses.get_batch(N_batch_w)
                         # combine the batches from both memories to create a single
                         # batch which represents 'normal' and 'loss' moves with a
                         # predetermined ratio.
 
-                        phi_i_batch = np.concatenate((batch_n['phi_i'], batch_l['phi_i'])  , axis=0)/255.0
-                        phi_j_batch = np.concatenate((batch_n['phi_j'], batch_l['phi_j'] ) , axis=0)/255.0
-                        a_i_batch   = np.concatenate((batch_n['a_i']  , batch_l['a_i'])    , axis=0)
-                        r_i_batch   = np.concatenate((batch_n['r_i']  , batch_l['r_i'])    , axis=0)
-                        t_i_batch   = np.concatenate((batch_n['t_i']  , batch_l['t_i'])    , axis=0)
+                        phi_i_batch = np.concatenate((batch_n['phi_i'], batch_l['phi_i'], batch_w['phi_i'])  , axis=0)/255.0
+                        phi_j_batch = np.concatenate((batch_n['phi_j'], batch_l['phi_j'], batch_w['phi_j'] ) , axis=0)/255.0
+                        a_i_batch   = np.concatenate((batch_n['a_i']  , batch_l['a_i'], batch_w['a_i'])    , axis=0)
+                        r_i_batch   = np.concatenate((batch_n['r_i']  , batch_l['r_i'], batch_w['r_i'])    , axis=0)
+                        t_i_batch   = np.concatenate((batch_n['t_i']  , batch_l['t_i'], batch_w['t_i'])    , axis=0)
 
                         feed_dict_batch = { graph_vars['phi_i_']:(phi_i_batch).astype(np.float32),
                                             graph_vars['phi_j_']:(phi_j_batch).astype(np.float32),
@@ -801,7 +810,7 @@ class deepQ:
                     summarynew.value.add(tag='avg validation reward', simple_value=avg_valid_reward)
 
 
-                    print("wirting summary")
+                    #print("wirting summary")
                     writer.add_summary(summarynew, epi+1)
                     # writer.flush()
                     if epi<self.PARAMS['OUTPUT_STEP']:
