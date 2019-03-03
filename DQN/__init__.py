@@ -604,12 +604,7 @@ class deepQ:
 
 
                     # ----------------------------------------------------------
-                    # print("action taken = ",action)
-                    # print(eps_tmp)
-                    #print("reward = ",reward)
-                    # print('\n')
-                    # process some of the outputs to make them behave nicely
-                    # with the network and computational graph
+
 
                     # preprocess the image
                     new_obs = self.preprocess(new_obs)
@@ -701,10 +696,6 @@ class deepQ:
                         loss0 = sess.run(graph_vars['loss_'],feed_dict=feed_dict_batch)
                         # append loss to be averaged later
                         losses.append(loss0)
-
-                        # get the loss sent as a scalr to tensorboard summary
-                        # tmp_summary = sess.run(graph_vars['merged'],feed_dict=feed_dict_batch)
-                        # writer.add_summary(tmp_summary, epi)
 
 
 
