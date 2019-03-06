@@ -731,7 +731,7 @@ class deepQ:
                         sess.run(graph_vars['update_target'])
 
                     # stop playing this game, if the move just performed was terminal
-                    if (done):
+                    if (np.abs(reward)>0.1):
                         break
                 # --------------------------------------------------------------
 
@@ -815,7 +815,7 @@ class deepQ:
                     writer.flush()
 
                     time_ep2 = time.time()
-                    print(" on epsiode {a:d} ----- avg steps = {b:.1f} ------ avg reward = {c:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],c=reward_p_ep[out_count],d=eps_tmp,e=time_ep2-time_ep1))
+                    print(" on epsiode {a:d} ----- avg/max steps = {b:.1f} / {maxsteps:.1f} ------ avg/max reward = {c:.1f} / {maxre:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],maxsteps=np.amax(np.asarray(steps_list)),c=reward_p_ep[out_count],maxre=np.amax(np.asarray(reward_list)),d=eps_tmp,e=time_ep2-time_ep1))
                     time_ep1 = time.time()
                     out_count+=1
 
@@ -1063,6 +1063,6 @@ class deepQ:
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-            ani.save('./../figs/'+self.params_text+'.mp4',writer=writer)
+            ani.save('./../figs/'+self.params_text+'_new.mp4',writer=writer)
 
         return None
