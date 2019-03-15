@@ -68,13 +68,13 @@ print(N_squash)
 # ------------------------------------------------------------------------------
 
 HYPERPARAMS = {
-                'ALPHA':2.5e-4,
+                'ALPHA':1.0e-3,
                 'GAMMA': 0.99,
                 'EPSILON_H':1.00,
                 'EPSILON_L':0.02,
-                'EPS_DECAY':80000.0,
+                'EPS_DECAY':70000.0,
                 'EPI_SWAP':10000,
-                'EPI_START':30,
+                'EPI_START':20,
                 'N_FILTER':16,
                 'N_FC':256,
                 'N_memory':250000,

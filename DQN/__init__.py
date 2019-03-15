@@ -437,6 +437,30 @@ class deepQ:
         return graph_vars
 
 
+    def summary_hist(self,summary_,tag,data,bins):
+        npdata = np.asarray(data)
+        hist_vals, bin_edges = np.histogram(npdata,bins)
+
+        # plt.plot(bin_edges[:-1],hist_vals)
+        # plt.show()
+
+        hist = tf.HistogramProto()
+        hist.min = np.min(npdata)
+        hist.max = np.max(npdata)
+
+        bin_edges = bin_edges[:-1]
+
+        for b in bin_edges:
+            hist.bucket_limit.append(b)
+        for hv in hist_vals:
+            hist.bucket.append(hv)
+
+        print("going to write hist")
+        summary_.value.add(tag=tag,histo=hist)
+
+
+
+        return None
     #---------------------------------------------------------------------------
 
     def train(self, N_episodes):
@@ -489,14 +513,20 @@ class deepQ:
             # the memory would then contain fewer losing moves to learn from. Which
             # could cause the model to 'forget' how to play.
 
-            N_mem_normal = int(0.80*self.HYPERPARAMS['N_memory'])
-            N_mem_losses = int(0.10*self.HYPERPARAMS['N_memory']) # - N_mem_normal #int(0.05*self.HYPERPARAMS['N_memory'])
+            N_mem_normal = int(0.7*self.HYPERPARAMS['N_memory'])
+            N_mem_losses = int(0.15*self.HYPERPARAMS['N_memory']) # - N_mem_normal #int(0.05*self.HYPERPARAMS['N_memory'])
             N_mem_wins   = self.HYPERPARAMS['N_memory'] - N_mem_normal - N_mem_losses
 
             memory_normal = Qmemory(N_mem_normal,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
             memory_wins   = Qmemory(N_mem_wins  ,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
             memory_losses = Qmemory(N_mem_losses,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
 
+            #N_batch_n = int(0.9*self.HYPERPARAMS['N_batch'])
+            N_batch_l = int(0.15*self.HYPERPARAMS['N_batch'])
+            N_batch_w = N_batch_l
+            N_batch_n = self.HYPERPARAMS['N_batch'] - N_batch_w - N_batch_l
+
+            print(N_batch_n,N_batch_l,N_batch_w)
             # ------------------------------------------------------------------
 
             # counter for number of steps taken
@@ -666,16 +696,13 @@ class deepQ:
                         # define sizes of batches for the 'normal' memory, and
                         # batch size for the 'losses' memory.
 
-                        N_batch_n = int(0.7*self.HYPERPARAMS['N_batch'])
-                        N_batch_l = int(0.2*self.HYPERPARAMS['N_batch'])
-                        N_batch_w = self.HYPERPARAMS['N_batch'] - N_batch_n - N_batch_l
-
-                        #print(N_batch_n)
-                        #print(N_batch_l)
 
                         batch_n = memory_normal.get_batch(N_batch_n)
                         batch_l = memory_losses.get_batch(N_batch_l)
                         batch_w = memory_losses.get_batch(N_batch_w)
+                        # print(np.shape(batch_n['phi_i']))
+                        # print(np.shape(batch_l['phi_i']))
+                        # print(np.shape(batch_w['phi_i']),"\n")
                         # combine the batches from both memories to create a single
                         # batch which represents 'normal' and 'loss' moves with a
                         # predetermined ratio.
@@ -686,6 +713,8 @@ class deepQ:
                         r_i_batch   = np.concatenate((batch_n['r_i']  , batch_l['r_i'], batch_w['r_i'])    , axis=0)
                         t_i_batch   = np.concatenate((batch_n['t_i']  , batch_l['t_i'], batch_w['t_i'])    , axis=0)
 
+
+                        #print(np.shape(phi_i_batch))
                         feed_dict_batch = { graph_vars['phi_i_']:(phi_i_batch).astype(np.float32),
                                             graph_vars['phi_j_']:(phi_j_batch).astype(np.float32),
                                             graph_vars['r_i_']:r_i_batch,
@@ -731,7 +760,7 @@ class deepQ:
                         sess.run(graph_vars['update_target'])
 
                     # stop playing this game, if the move just performed was terminal
-                    if (np.abs(reward)>0.1):
+                    if (done):
                         break
                 # --------------------------------------------------------------
 
@@ -763,10 +792,11 @@ class deepQ:
                     summarynew.value.add(tag='avg action',simple_value=av_action_p_ep[out_count])
                     summarynew.value.add(tag='epsilon', simple_value=eps_tmp)
 
+                    self.summary_hist(summarynew,'score hist',reward_list,np.arange(43)-21)
 
                     # ALSO: at the output points, make a validation check
                     # run a game with no random moves: what is score
-                    avg_valid_reward = 0
+                    avg_valid_reward = 0.0
                     N_valid = 3
                     for j in np.arange(N_valid):
                         valid_reward = 0.0
@@ -795,9 +825,11 @@ class deepQ:
                             valid_reward+=reward
                             if (done):
                                 break
-                        avg_valid_reward+=valid_reward
 
-                    avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
+                        avg_valid_reward+=valid_reward/float(N_valid)
+
+
+                    #avg_valid_reward = avg_valid_reward*1.0/float(N_valid)
                     summarynew.value.add(tag='avg validation reward', simple_value=avg_valid_reward)
 
 
@@ -815,7 +847,7 @@ class deepQ:
                     writer.flush()
 
                     time_ep2 = time.time()
-                    print(" on epsiode {a:d} ----- avg/max steps = {b:.1f} / {maxsteps:.1f} ------ avg/max reward = {c:.1f} / {maxre:.1f}  ---- epsilon = {d:.2f} ----- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],maxsteps=np.amax(np.asarray(steps_list)),c=reward_p_ep[out_count],maxre=np.amax(np.asarray(reward_list)),d=eps_tmp,e=time_ep2-time_ep1))
+                    print("epsiode {a:d} --- avg/max steps = {b:.1f} / {maxsteps:.1f} --- avg/max/valid reward = {c:.1f} / {maxre:.1f} / {validre:.1f} --- epsilon = {d:.2f} --- time  = {e:.2f} \n".format(a=epi+1,b=steps_p_ep[out_count],maxsteps=np.amax(np.asarray(steps_list)),c=reward_p_ep[out_count],maxre=np.amax(np.asarray(reward_list)),validre=avg_valid_reward,d=eps_tmp,e=time_ep2-time_ep1))
                     time_ep1 = time.time()
                     out_count+=1
 
@@ -1063,6 +1095,6 @@ class deepQ:
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-            ani.save('./../figs/'+self.params_text+'_new.mp4',writer=writer)
+            ani.save('./../figs/'+self.params_text+'_v0goodgame.mp4',writer=writer)
 
         return None
