@@ -62,7 +62,6 @@ if aws_run:
                     'EPSILON_H':1.00,
                     'EPSILON_L':0.02,
                     'EPS_DECAY':70000.0,
-                    'EPI_SWAP':10000,
                     'EPI_START':20,
                     'N_FILTER':16,
                     'N_FC':256,
@@ -70,7 +69,6 @@ if aws_run:
                     'N_batch':32,
                     'UPDATE_FREQ':5000,
                     'TERMINAL_POINTS':True,
-                    'RATE_INCREASE':1,
                     'LOSS_SCALE':2.0
                     }
     PARAMS = {  'N_x': 84,
@@ -88,15 +86,13 @@ else:
                     'EPSILON_H':1.00,
                     'EPSILON_L':0.02,
                     'EPS_DECAY':60000.0,
-                    'EPI_SWAP':10000,
                     'EPI_START':4,
                     'N_FILTER':1,
                     'N_FC':2,
                     'N_memory':80000,
                     'N_batch':4,
-                    'UPDATE_FREQ':500,
+                    'UPDATE_FREQ':5000,
                     'TERMINAL_POINTS':True,
-                    'RATE_INCREASE':1,
                     'LOSS_SCALE':2.0
                     }
 

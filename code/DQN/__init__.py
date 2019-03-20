@@ -34,8 +34,17 @@ class Qmemory:
     def __init__(self,N_mem, N_x, N_y, N_frames):
         """create a memory object
 
+        Create an object for storing transitions between states in the game/process
+        being learned. A single transition contains (phi_i,phi_j,a_i,r_i,terminal_i):
+
+        phi_i: state before action taken
+        phi_j: state after action taken
+        a_i:   the action that was taken
+        r_i:   the reward received for this action
+        terminal_i: whether this move was terminal for the game/process
+
         Args:
-            N_mem: how large the memory should be, how many transitions to store
+            N_mem: how large the memory should be = how many transitions to store
             obs_data_size: how large is each observation (state), as a single integer.
                         e.g a 2d frame of 80x80 80x80=1600
             N_frames: how many frames are stored per state
@@ -89,7 +98,7 @@ class Qmemory:
                         - t_i: whether terminal
         """
         # check if memory is full or not
-        #print(self.mem_count, self.N_mem)
+
         if self.mem_count>=self.N_mem:
             # is full
             max_val = self.N_mem
@@ -97,7 +106,6 @@ class Qmemory:
             # isn't full - max index to look up to is the current count
             max_val = self.mem_count
 
-        #print(max_val, N_count, N_mem)
         # get random integeres between 0 and our max_val defined above
         rand_ints = np.random.randint(0,high=max_val,size=N_get)
 
@@ -121,10 +129,7 @@ class deepQ:
     The method used here contains various elements of the deepQ algorithm, namely:
      - experience replay
      - double Q learning
-     - online and target networks with strided update
-
-
-    object contains methods for preprocessing frames of gym games
+     - online and target networks with strided updates
 
     """
 
@@ -132,7 +137,36 @@ class deepQ:
     # --------------------------------------------------------------------------
 
     def __init__(self,game,HYPERPARAMS,PARAMS):
-        """initialize useful stuff"""
+        """initialize
+
+        initialize the hyperparameters of the model, start the game environment,
+        setup the tensorflow graph, start a filenaming convention for results.
+
+        Args:
+            HYPERPARAMS: a dictionary of hyperparameters:
+                - ALPHA: learning rate
+                - GAMMA: reward discount factor
+                - EPSILON_H: initial probability of random actions in training
+                - EPSILON_L: lowest probability of random actions in training
+                - EPS_DECAY: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
+                - EPI_START: episode at which to begin training
+                - N_FILTER: Number of filters for initial convolutional layer
+                - N_FC: Number of hidden units in fully connected layer
+                - N_memory: Number of transitions to store
+                - N_batch: The mini-batch size
+                - UPDATE_FREQ: how many frames to train on between updates of target network
+                - TERMINAL_POINTS: count a single point loss as a terminal move (boolean)
+                - LOSS_SCALE: scale on Huber loss, for testing, keep as 2.0
+
+            PARAMS: A dictionary of parameters of the model:
+                - N_x: x dimension of a prepprocessed frame (pixels)
+                - N_y: y dimension of a prepprocessed frame (pixels)
+                - Nc: number of frames in a single game state
+                - N_squash: dimensions in x,y of state after both conv layers applied
+                - OUTPUT_STEP: How often (in episodes) to save output summaries
+                - MAX_STEPS: max number of frames allowed per episode
+
+        """
 
         self.env = gym.make(game)
 
@@ -164,7 +198,6 @@ class deepQ:
         term_txt  = f"terminal_{HYPERPARAMS['TERMINAL_POINTS']:d}"
         self.params_text = alpha_txt+upd_txt+decay_txt+nfc_txt+\
                            nfilt_txt+mem_txt+batch_txt+term_txt
-        #self.params_text = f"alpha_{HYPERPARAMS['ALPHA']:.2e}_updfreq_{HYPERPARAMS['UPDATE_FREQ']:d}_EPSDECAY_{HYPERPARAMS['EPS_DECAY']:.1f}_NFC_{HYPERPARAMS['N_FC']:d}_NFilter_{HYPERPARAMS['N_FILTER']:d}_mem_{HYPERPARAMS['N_memory']:d}_batch_{HYPERPARAMS['N_batch']:d}"
 
         print("\n==========================================================")
         print("\n\n filename for saving       : ",self.params_text)
@@ -183,17 +216,32 @@ class deepQ:
         Args:
             frame: a frame of the game
 
-        applies self.mean_obs and self.std_obvs to normalize the data onto distribution
-        with std=1 and mean=0, to allow for better initialization of network etc.
+        Returns:
+            frame_out: the preprocessed frame
         """
         frame_out = np.zeros((84,84),dtype=np.uint8)
+        # to black and white
         tmp = np.mean(frame, axis=2)
+        # trim edges
         tmp = tmp[28:-12, :]
+        # downsample
         tmp = tmp[1:-1:2,::2]
         frame_out[:,2:-2] = tmp.astype(np.uint8)
         return frame_out
 
     def action2step(self,act):
+        """ convert integer into game action
+
+        In order that Pong can have only 3 actions (nothing, up, down), rather
+        than the 6 (each action replicated) in the gym environment, use a
+        preprocessing for the actions.
+
+        Args:
+            act: integer representing an action
+        Returns:
+            step: an integer for the action, act, expected by the game
+
+        """
         step=act+1
         return step
 
@@ -201,21 +249,29 @@ class deepQ:
     #---------------------------------------------------------------------------
 
     def Qnet(self,obs,call_type,trainme,reuseme):
-        """neural network to get Q for given state
+        """Neural network to get Q for given state
+
+        Structure of the network is:
+
+        - convolutional layer (K=8,S=4) with N_FILTER filters
+        - convolutional layer (K=8,S=4) with 2*N_FILTER filters
+        - Fully Connected layer with N_FC hidden units
+
+        It takes in input observation (a state of a game), and returns the predicted
+        value Q for this action. The maximal position within Q is the policy action.
 
         Args:
             obs: (tensor) set of observations to predict Q for: size: batch,(x,y..),frames
                 frames should be 4 to match deepmind paper.
-                (x,y...) to be determined by game - 2d frame => x,y
-                but Cartpole gives 1d array as frame so is just x
-            call_type: 'online_' or 'target_' - which network to use
+            call_type: 'online/' or 'target/' - which network to use
             trainme: (bool) should the weights be trainable
             reuseme: (bool) should the weights be reusable
 
+        Returns:
+            z_out: output of the Neural Net, which is the predicted Q for the observation
+
         """
-        # TODO: different initializations (glorot perhaps)
-        # also maybe try batch norm : but n.b would need to share the variables
-        # of those layers from online to target
+
         with tf.variable_scope(call_type):
             z = tf.reshape(obs, [-1,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc']])
             #print(z.shape)
@@ -239,7 +295,7 @@ class deepQ:
                 z_conv1_flat = tf.reshape(z_conv1,[-1,self.PARAMS['N_squash']*self.PARAMS['N_squash']*(2*self.HYPERPARAMS['N_FILTER'])])
 
             with tf.variable_scope('FC_layer0',reuse=reuseme):
-                z_FC0 =  tf.layers.Dense(units=self.HYPERPARAMS['N_FC'],trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_conv1_flat)
+                z_FC0 =  tf.layers.Dense(units=self.HYPERPARAMS['N_FC'],activation=tf.nn.relu,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_conv1_flat)
 
             with tf.variable_scope('layer_out',reuse=reuseme):
                 z_out = tf.layers.Dense(units=self.N_action,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_FC0)
@@ -250,7 +306,12 @@ class deepQ:
     #---------------------------------------------------------------------------
 
     def update_layer(self,layer):
-        """update the wieghts/biases of target network
+        """Update the weights/biases of target network
+
+        For stability, it is useful to actively train an online network, and
+        only periodically update a target network with the weights and biases of
+        the online network. This method updates a gicen layer in the target
+        network to be the same as the equivilent layer of the online network
 
         Args:
             layer: (string) name of layer. e.g. 'layer0'
@@ -280,7 +341,7 @@ class deepQ:
     def make_graph(self):
         """ Define the computational graph
 
-        takes in the game states (before and after action), action, reward, and
+        Takes in the game states (before and after action), action, reward, and
         whether terminal as placeholders. Uses these to compute Q values for
         both online and target networks. Applies the double deep Q learning
         algorithm, using self.Qnet as the neural network which predicts the
@@ -408,6 +469,8 @@ class deepQ:
                 upd_FC_k0,upd_FC_b0 = self.update_layer('FC_layer0/dense')
                 upd_k_out,upd_b_out = self.update_layer('layer_out/dense')
 
+                # group all of these update ops into a single op for updating the
+                # entire target network
                 update_target = tf.group(upd_c_k0, upd_c_b0, upd_c_k1, upd_c_b1, upd_FC_k0, upd_FC_b0, upd_k_out, upd_b_out)
 
             # ------------------------------------------------------------------
@@ -438,11 +501,16 @@ class deepQ:
 
 
     def summary_hist(self,summary_,tag,data,bins):
+        """ Add Histogram to tensorboard summary
+
+        Args:
+            summary_: a tf summary object to add histogram to
+            tag: a name/tag for the histogram
+            data: The data to be plotted
+            bins: The number of bins for the histogram, or an array of bin edges
+        """
         npdata = np.asarray(data)
         hist_vals, bin_edges = np.histogram(npdata,bins)
-
-        # plt.plot(bin_edges[:-1],hist_vals)
-        # plt.show()
 
         hist = tf.HistogramProto()
         hist.min = np.min(npdata)
@@ -464,7 +532,7 @@ class deepQ:
     #---------------------------------------------------------------------------
 
     def train(self, N_episodes):
-        """train the DeepQ network
+        """Train the DeepQ network
 
         Args:
             N_epsiodes: how many episodes to train over
@@ -489,7 +557,6 @@ class deepQ:
         # ----------------------------------------------------------------------
         # ----------------- now use the graph above as the session -------------
         with tf.Session(graph=self.graph) as sess:
-            #K.set_session(sess)
 
 
             sess.run(graph_vars['graph_init'])
@@ -509,9 +576,9 @@ class deepQ:
             # 'normal' memory - stores non-final moves
             # 'losses' memory - stores only final (losing) moves
 
-            # the idea of this is that as game play gets longer as mmodel improves,
-            # the memory would then contain fewer losing moves to learn from. Which
-            # could cause the model to 'forget' how to play.
+            # the idea of this is to keep a consistent number of losing/winning
+            # and 'normal' moves, so that the number of each type used in training
+            # stays consistent
 
             N_mem_normal = int(0.7*self.HYPERPARAMS['N_memory'])
             N_mem_losses = int(0.15*self.HYPERPARAMS['N_memory']) # - N_mem_normal #int(0.05*self.HYPERPARAMS['N_memory'])
@@ -521,7 +588,7 @@ class deepQ:
             memory_wins   = Qmemory(N_mem_wins  ,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
             memory_losses = Qmemory(N_mem_losses,self.PARAMS['N_x'],self.PARAMS['N_y'],self.PARAMS['Nc'])
 
-            #N_batch_n = int(0.9*self.HYPERPARAMS['N_batch'])
+            # also define how big each batch should be
             N_batch_l = int(0.15*self.HYPERPARAMS['N_batch'])
             N_batch_w = N_batch_l
             N_batch_n = self.HYPERPARAMS['N_batch'] - N_batch_w - N_batch_l
@@ -597,13 +664,8 @@ class deepQ:
                     # get action using the Q net, or at random
 
                     if np.random.uniform() < eps_tmp:
-                        #action = np.asarray(self.env.action_space.sample())
                         action = np.asarray(np.random.randint(self.N_action))
                         new_obs, reward, done, info = self.env.step(self.action2step(action))
-
-                        #av_acts.append(action)
-                        # print("random action = ",action)
-                        # print("random step   = ",self.action2step(action))
                     else:
                         # feed data into the session graph to get Q as a numpy array
                         # only phi_i is actual data
@@ -617,7 +679,6 @@ class deepQ:
 
                         # use Q network graph to get Q_i, uses the online network
                         Q = np.squeeze(sess.run([graph_vars['Q_i_']],tmp_feed_dict))
-                        #Qhat = sess.run([Q_j_],tmp_feed_dict)
 
                         # append the max and min Q to the lists (will be averaged later)
                         maxQs.append(np.amax(Q))
@@ -625,12 +686,10 @@ class deepQ:
 
                         # the action to be taken, is one that maximises Q
                         action = np.argmax(Q)
-                        #print(action)
+
                         new_obs, reward, done, info = self.env.step(self.action2step(action))
                         av_acts.append(action)
-                        # print("Q        = ",Q)
-                        # print("Q action = ",action)
-                        # print("step     = ",self.action2step(action))
+
 
 
                     # ----------------------------------------------------------
@@ -644,12 +703,6 @@ class deepQ:
                     # this then becomes the new state containg 'Nc' frames
                     new_phi = np.concatenate((current_phi[:,:,1:],new_obs[:,:,np.newaxis]), axis=2)
 
-                    # adapt the reward on losing move to be more negative to
-                    # penalize failing more
-                    # if done:
-                    #     reward=-5.0
-
-
                     # convert the boolean 'done' which tells us if move is the last
                     # of game, to a float (number). we want it to be 0.0 when it is
                     # the final move - so we need the opposite of normal conversion
@@ -661,7 +714,6 @@ class deepQ:
                     else:
                         term_float = np.array(reward > -0.1).astype(np.float32)
 
-                    #print(reward,term_float)
 
                     tot_reward+=reward
 
@@ -688,6 +740,8 @@ class deepQ:
 
                     # APPLY LEARING UPDATES
 
+                    # ----------------------------------------------------------
+
                     # take a batch of the experiences from memory
                     # only do if experience memory is big enough to contain N_batch entries
                     #if (mem_count>self.HYPERPARAMS['N_batch']):
@@ -700,9 +754,7 @@ class deepQ:
                         batch_n = memory_normal.get_batch(N_batch_n)
                         batch_l = memory_losses.get_batch(N_batch_l)
                         batch_w = memory_losses.get_batch(N_batch_w)
-                        # print(np.shape(batch_n['phi_i']))
-                        # print(np.shape(batch_l['phi_i']))
-                        # print(np.shape(batch_w['phi_i']),"\n")
+
                         # combine the batches from both memories to create a single
                         # batch which represents 'normal' and 'loss' moves with a
                         # predetermined ratio.
@@ -725,8 +777,6 @@ class deepQ:
                         loss0 = sess.run(graph_vars['loss_'],feed_dict=feed_dict_batch)
                         # append loss to be averaged later
                         losses.append(loss0)
-
-
 
 
                         # APPLY GRADIENT DESCENT for batch
@@ -756,7 +806,6 @@ class deepQ:
 
                     if (np.mod(steps_count,self.HYPERPARAMS['UPDATE_FREQ'])==0 and steps_count>0):
                         #update the layers by running the update ops...
-                        #print("updating, ",self.HYPERPARAMS['UPDATE_FREQ'],np.mod(steps_count,self.HYPERPARAMS['UPDATE_FREQ']),steps_count)
                         sess.run(graph_vars['update_target'])
 
                     # stop playing this game, if the move just performed was terminal
@@ -853,17 +902,6 @@ class deepQ:
 
 
 
-
-                # if epsioside is a multiple of UPDATE_FREQ update the weights/biases
-                # of the target network to be those of the online network
-                # if (np.mod(epi,self.HYPERPARAMS['UPDATE_FREQ'])==0):
-                #     #update the layers by running the update ops...
-                #     sess.run(graph_vars['update_target'])
-                #     # sess.run([upd_c_k0,upd_c_b0,
-                #     #           upd_c_k1,upd_c_b1,
-                #     #           upd_FC_k0, upd_FC_b0,
-                #     #           upd_k_out, upd_b_out])
-
             #-------------------------------------------------------------------
 
             # n.b we are still inside with session as sess statement
@@ -880,7 +918,15 @@ class deepQ:
     #---------------------------------------------------------------------------
 
     def play_animated_game(self):
-        #params_text = f"NFC_{self.HYPERPARAMS['N_FC']:d}"
+        """ Render a game using a checkpoint for policy
+
+            The HYPERPARAMS passed to the class inititaion should be the same
+            as the HYPERPARAMS that were used for training the model.
+
+            using the env.render functionality a game will be played locally
+            on screen.
+
+        """
         save_loc    = "./../ckpts"+"/"+self.params_text #+".ckpt"
 
         graph_vars = self.make_graph()
@@ -888,9 +934,8 @@ class deepQ:
         #saver = tf.train.Saver()
         with tf.Session(graph=self.graph) as sess:
             new_saver = tf.train.import_meta_graph(save_loc+'.meta')
-            #new_saver.restore(sess, save_loc+'.data-00000-of-00001')
             new_saver.restore(sess,tf.train.latest_checkpoint("./../ckpts/"))
-            #saver.restore(sess,save_loc)
+
 
             ims = []
             fig = plt.figure()
@@ -919,26 +964,30 @@ class deepQ:
 
                 time.sleep(0.04)
 
-                # im = plt.imshow(frame, animated=True)
-                # ims.append([im])
+
                 self.env.render()
                 if (done):
                     break
             self.env.close()
-            # ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat=False)
-            #
-            # Writer = animation.writers['ffmpeg']
-            # writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-            #
-            # ani.save('./../figs/'+params_text+'.mp4',writer=writer)
+
 
         return None
 
     def save_animated_game_mp4(self,dir='..'):
         """save a game to mp4 format
 
-        this function loads game from checkpoint, so make sure you already ran
-        a game with the hyperparams you want to check.
+        The HYPERPARAMS passed to the class inititaion should be the same
+        as the HYPERPARAMS that were used for training the model, in order to
+        view how that model plays.
+
+        Using the game will be stored as mp4 using matplotlib animation, via ffmpeg.
+
+        The mp4 will be saved in a directory 'figs', on the same level as the 'code'
+        directory.
+
+        Args:
+            dir: (optional) directory in which to look for a directory 'ckpts'
+                where ckpt will be attempted to be loaded from, defaults to '..'
 
         """
         save_loc    = "./"+dir+"/ckpts"+"/"+self.params_text #+".ckpt"
@@ -994,10 +1043,26 @@ class deepQ:
         return None
 
     def save_game_array(self,dir='..'):
-        """save a game to mp4 format
+        """Save a game as a 3d array of pixels
 
-        this function loads game from checkpoint, so make sure you already ran
-        a game with the hyperparams you want to check.
+        The HYPERPARAMS passed to the class inititaion should be the same
+        as the HYPERPARAMS that were used for training the model, in order to
+        view how that model plays.
+
+        the frames of the game played by the policy is stored in an array, of
+        dimension (x,y,number of frames). The x and y dimensions are downsampled
+        from the raw frame state to reduce the output size. array will be saved
+        by numpy.save(), into a directory 'game_arrays' at the same level as 'code'
+        which can be loaded loaded seperately in 'mp4_from_array' method to create
+        a video of the game.
+
+        Note that when running on an aws instance it is convenient to save the
+        array to file on the aws machine, and scp the saved array back to the
+        local machine, where one can then create the video.
+
+        Args:
+            dir: (optional) directory in which to look for a directory 'ckpts'
+                where ckpt will be attempted to be loaded from, defaults to '..'
 
         """
         save_loc    = "./"+dir+"/ckpts"+"/"+self.params_text #+".ckpt"
@@ -1065,10 +1130,16 @@ class deepQ:
         return None
 
     def mp4_from_array(self,dir='..'):
-        """save a game to mp4 format
+        """Save a game to mp4 format, from a saved numpy array
 
-        this function loads game from checkpoint, so make sure you already ran
-        a game with the hyperparams you want to check.
+        The HYPERPARAMS passed to the class inititaion should be the same
+        as the HYPERPARAMS that were used for training the model, in order to
+        view how that model plays.
+
+        Args:
+            dir: (optional) directory in which to look for a directory 'game_arrays'
+                where an array will be attempted to be loaded from, defaults to '..'
+
 
         """
         save_loc    = "./"+dir+"/game_arrays"+"/"+self.params_text #+".ckpt"
@@ -1095,6 +1166,6 @@ class deepQ:
             Writer = animation.writers['ffmpeg']
             writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-            ani.save('./../figs/'+self.params_text+'_v0goodgame.mp4',writer=writer)
+            ani.save('./../figs/'+self.params_text+'.mp4',writer=writer)
 
         return None
