@@ -30,6 +30,8 @@ matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
 game = 'PongDeterministic-v4'
 #game = 'Pong-v0'
 
+aws_run = False
+
 # ------------------------------------------------------------------------------
 
 # optional bit of code to check the env working visually
@@ -52,57 +54,63 @@ o2 = int( ( (o1-4)/2 ) + 1 )
 N_squash = o2
 
 #
+if aws_run:
+    N_episodes = 300
+    HYPERPARAMS = {
+                    'ALPHA':1.0e-3,
+                    'GAMMA': 0.99,
+                    'EPSILON_H':1.00,
+                    'EPSILON_L':0.02,
+                    'EPS_DECAY':70000.0,
+                    'EPI_SWAP':10000,
+                    'EPI_START':20,
+                    'N_FILTER':16,
+                    'N_FC':256,
+                    'N_memory':250000,
+                    'N_batch':32,
+                    'UPDATE_FREQ':5000,
+                    'TERMINAL_POINTS':True,
+                    'RATE_INCREASE':1,
+                    'LOSS_SCALE':2.0
+                    }
+    PARAMS = {  'N_x': 84,
+                'N_y': 84,
+                'Nc': 4,
+                'N_squash':N_squash,
+                'OUTPUT_STEP': 10,
+                'MAX_STEPS': 20000
+                }
+else:
+    N_episodes = 10
+    HYPERPARAMS = {
+                    'ALPHA':1.5e-4,
+                    'GAMMA': 0.99,
+                    'EPSILON_H':1.00,
+                    'EPSILON_L':0.02,
+                    'EPS_DECAY':60000.0,
+                    'EPI_SWAP':10000,
+                    'EPI_START':4,
+                    'N_FILTER':1,
+                    'N_FC':2,
+                    'N_memory':80000,
+                    'N_batch':4,
+                    'UPDATE_FREQ':500,
+                    'TERMINAL_POINTS':True,
+                    'RATE_INCREASE':1,
+                    'LOSS_SCALE':2.0
+                    }
 
-# 0.001 ok ish
-#
-# HYPERPARAMS = {
-#                 'ALPHA':1.0e-3,
-#                 'GAMMA': 0.99,
-#                 'EPSILON_H':1.00,
-#                 'EPSILON_L':0.02,
-#                 'EPS_DECAY':70000.0,
-#                 'EPI_SWAP':10000,
-#                 'EPI_START':20,
-#                 'N_FILTER':16,
-#                 'N_FC':256,
-#                 'N_memory':250000,
-#                 'N_batch':32,
-#                 'UPDATE_FREQ':5000,
-#                 'TERMINAL_POINTS':True,
-#                 'RATE_INCREASE':1,
-#                 'LOSS_SCALE':2.0
-#                 }
-
-
-HYPERPARAMS = {
-                'ALPHA':1.5e-4,
-                'GAMMA': 0.99,
-                'EPSILON_H':1.00,
-                'EPSILON_L':0.02,
-                'EPS_DECAY':60000.0,
-                'EPI_SWAP':10000,
-                'EPI_START':4,
-                'N_FILTER':1,
-                'N_FC':2,
-                'N_memory':80000,
-                'N_batch':4,
-                'UPDATE_FREQ':500,
-                'TERMINAL_POINTS':True,
-                'RATE_INCREASE':1,
-                'LOSS_SCALE':2.0
+    PARAMS = {  'N_x': 84,
+                'N_y': 84,
+                'Nc': 4,
+                'N_squash':N_squash,
+                'OUTPUT_STEP': 2,
+                'MAX_STEPS': 20000
                 }
 
-PARAMS = {  'N_x': 84,
-            'N_y': 84,
-            'Nc': 4,
-            'N_squash':N_squash,
-            'OUTPUT_STEP': 2,
-            'MAX_STEPS': 20000
-            }
 
 
 
-N_episodes = 300# 6000 #300*20
 results = []
 alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
 update_vec = np.array([5000])
