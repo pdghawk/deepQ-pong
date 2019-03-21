@@ -11,3 +11,4 @@ echo "$2"
 scp -i ~/.ssh/"$1" -r ../code/DQN ubuntu@"$2":/home/ubuntu/deep-pong/code/DQN
 scp -i ~/.ssh/"$1" ../code/simple_loops.py ubuntu@"$2":/home/ubuntu/deep-pong/code
 scp -i ~/.ssh/"$1" ../code/play_from_ckpt.py ubuntu@"$2":/home/ubuntu/deep-pong/code
+scp -i ~/.ssh/"$1" ../code/single_train.py ubuntu@"$2":/home/ubuntu/deep-pong/code

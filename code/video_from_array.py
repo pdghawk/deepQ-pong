@@ -19,34 +19,14 @@ import matplotlib #.pyplot as plt
 matplotlib.use('Agg') # this makes the fgire in focus rather than temrinal
 import matplotlib.pyplot as plt
 
-import gym
 import DQN
 
 # ------------------------------------------------------------------------------
 
 game = 'PongDeterministic-v4'
 aws_run=False
-aws_location='2019-03-09/1602'
-# ------------------------------------------------------------------------------
+aws_location='2019-03-20/1842'
 
-env=gym.make(game)
-
-env.reset()
-
-frame, reward, done, tmp = env.step(env.action_space.sample())
-
-print('\n   frame shape is  -----  ', np.shape(frame), '   ------- \n')
-
-N_obs = np.size(frame,0)
-
-
-o1 = int( ( (84-8)/4 ) + 1 )
-print(o1)
-o2 = int( ( (o1-4)/2 ) + 1 )
-print(o2)
-N_squash = o2
-
-print(N_squash)
 # ------------------------------------------------------------------------------
 if aws_run:
     N_episodes = 300
@@ -61,15 +41,12 @@ if aws_run:
                     'N_FC':256,
                     'N_memory':250000,
                     'N_batch':32,
-                    'UPDATE_FREQ':5000,
+                    'UPDATE_FREQ':5001,
                     'TERMINAL_POINTS':True,
                     'LOSS_SCALE':2.0
                     }
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
-                'OUTPUT_STEP': 10,
+    PARAMS = {  'Nc': 4,
+                'OUTPUT_STEP': 2,
                 'MAX_STEPS': 20000
                 }
 else:
@@ -90,22 +67,13 @@ else:
                     'LOSS_SCALE':2.0
                     }
 
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
+    PARAMS = {  'Nc': 4,
                 'OUTPUT_STEP': 2,
                 'MAX_STEPS': 20000
                 }
 
 
-PARAMS = {  'N_x': 84,
-            'N_y': 84,
-            'Nc': 4,
-            'N_squash':N_squash,
-            'OUTPUT_STEP': 5,
-            'MAX_STEPS': 20000
-            }
+
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)

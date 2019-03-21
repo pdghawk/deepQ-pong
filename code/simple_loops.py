@@ -12,8 +12,6 @@ import matplotlib.animation as animation
 
 
 import seaborn as sns
-#import logging
-#logging.getLogger().setLevel(logging.INFO)
 
 # ------------------------------------------------------------------------------
 
@@ -25,56 +23,51 @@ matplotlib.rcParams['font.size']        = 10
 matplotlib.rcParams['legend.frameon']   = False
 matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
 #sns.set()
+
+
 # ------------------------------------------------------------------------------
 #game = 'PongNoFrameskip-v4'
-game = 'PongDeterministic-v4'
-#game = 'Pong-v0'
+#game = 'PongDeterministic-v4'
+game = 'Pong-v0'
 
-aws_run = False
+aws_run = True
 
 # ------------------------------------------------------------------------------
 
-# optional bit of code to check the env working visually
 
-env=gym.make(game)
-
-env.reset()
-
-frame, reward, done, tmp = env.step(env.action_space.sample())
-
-#print('\n   frame shape is  -----  ', np.shape(frame), '   ------- \n')
-
-N_obs = np.size(frame,0)
-
-
-o1 = int( ( (84-8)/4 ) + 1 )
-#print(o1)
-o2 = int( ( (o1-4)/2 ) + 1 )
-#print(o2)
-N_squash = o2
+# env=gym.make(game)
+#
+# env.reset()
+#
+# frame, reward, done, tmp = env.step(env.action_space.sample())
+#
+# o1 = int( ( (84-8)/4 ) + 1 )
+# print(o1)
+# o2 = int( ( (o1-4)/2 ) + 1 )
+# print(o2)
+# o3 = int( ( (o2-3)/1) + 1)
+# print(o3)
+# N_squash = o3
 
 #
 if aws_run:
-    N_episodes = 300
+    N_episodes = 200
     HYPERPARAMS = {
-                    'ALPHA':1.0e-3,
+                    'ALPHA':3.0e-4,
                     'GAMMA': 0.99,
                     'EPSILON_H':1.00,
-                    'EPSILON_L':0.02,
-                    'EPS_DECAY':70000.0,
-                    'EPI_START':20,
-                    'N_FILTER':16,
-                    'N_FC':256,
-                    'N_memory':250000,
+                    'EPSILON_L':0.03,
+                    'EPS_DECAY':80000.0,
+                    'EPI_START':40,
+                    'N_FILTER':32,
+                    'N_FC':512,
+                    'N_memory':400000,
                     'N_batch':32,
                     'UPDATE_FREQ':5000,
                     'TERMINAL_POINTS':True,
                     'LOSS_SCALE':2.0
                     }
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
+    PARAMS = {  'Nc': 4,
                 'OUTPUT_STEP': 10,
                 'MAX_STEPS': 20000
                 }
@@ -96,10 +89,7 @@ else:
                     'LOSS_SCALE':2.0
                     }
 
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
+    PARAMS = {  'Nc': 4,
                 'OUTPUT_STEP': 2,
                 'MAX_STEPS': 20000
                 }
@@ -167,6 +157,7 @@ for i in np.arange(len(vals)):
 
 
     deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
+    print("here")
     tmp_dict = deepQ.train(N_episodes)
     #deepQ.game(1)
 

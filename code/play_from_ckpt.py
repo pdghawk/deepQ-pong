@@ -14,9 +14,6 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-import time
-
-import gym
 
 import DQN
 
@@ -24,8 +21,6 @@ import matplotlib #.pyplot as plt
 matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
 import matplotlib.pyplot as plt
 
-
-import seaborn as sns
 
 # ------------------------------------------------------------------------------
 
@@ -45,29 +40,6 @@ aws_location='2019-03-09/1602'
 
 # ------------------------------------------------------------------------------
 
-# optional bit of code to check the env working visually
-
-
-env=gym.make(game)
-
-env.reset()
-
-frame, reward, done, tmp = env.step(env.action_space.sample())
-
-print('\n   frame shape is  -----  ', np.shape(frame), '   ------- \n')
-
-N_obs = np.size(frame,0)
-
-
-o1 = int( ( (84-8)/4 ) + 1 )
-print(o1)
-o2 = int( ( (o1-4)/2 ) + 1 )
-print(o2)
-N_squash = o2
-
-print(N_squash)
-
-# ------------------------------------------------------------------------------
 if aws_run:
     N_episodes = 300
     HYPERPARAMS = {
@@ -85,10 +57,7 @@ if aws_run:
                     'TERMINAL_POINTS':True,
                     'LOSS_SCALE':2.0
                     }
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
+    PARAMS = {  'Nc': 4,
                 'OUTPUT_STEP': 10,
                 'MAX_STEPS': 20000
                 }
@@ -110,17 +79,12 @@ else:
                     'LOSS_SCALE':2.0
                     }
 
-    PARAMS = {  'N_x': 84,
-                'N_y': 84,
-                'Nc': 4,
-                'N_squash':N_squash,
+    PARAMS = {  'Nc': 4,
                 'OUTPUT_STEP': 2,
                 'MAX_STEPS': 20000
                 }
 
 
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-if aws_run:
-    deepQ.save_game_array(dir='../aws_runs/'+aws_location)
-else:
-    deepQ.save_game_array()
+
+deepQ.save_game_array()

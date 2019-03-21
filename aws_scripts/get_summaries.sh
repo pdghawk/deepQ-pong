@@ -15,7 +15,7 @@ echo $TIME
 echo scp -i ~/.ssh/"$1" -r ubuntu@"$2":/home/ubuntu/deep-pong/data_summaries ../aws_runs/"$DATE"/"$TIME"
 
 
-DIR0="aws_runs/"$DATE""
+DIR0="../aws_runs/"$DATE""
 echo $DIR0
 
 if [ ! -d "$DIR0" ]; then
