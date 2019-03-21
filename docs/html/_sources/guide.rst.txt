@@ -11,7 +11,7 @@ how one can use it to solve Pong.
   <video controls src="_static/pong_game_epi200.mp4"></video>
 
 This video shows how an agents plays after training for 200 episodes. The agent
-is able to return the ball fairly regularly and even score 8 points. Further training
+is able to score points almost as well as the built-in pong player. Further training
 would be expected to increase the agents ability, particularly with some hyperparameter
 optimization.
 

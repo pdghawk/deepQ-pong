@@ -26,7 +26,7 @@ import DQN
 #game = 'PongDeterministic-v4'
 game = 'Pong-v0'
 aws_run=True
-aws_location='2019-03-21/1231'
+aws_location='2019-03-21/1650'
 
 # ------------------------------------------------------------------------------
 if aws_run:
@@ -40,7 +40,7 @@ if aws_run:
                     'EPI_START':40,
                     'N_FILTER':32,
                     'N_FC':512,
-                    'N_memory':400000,
+                    'N_memory':500000,
                     'N_batch':32,
                     'UPDATE_FREQ':5000,
                     'TERMINAL_POINTS':True,
