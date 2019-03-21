@@ -10,4 +10,4 @@ In particular, a double-deep Q network is used to solve pong specifically, altho
 the code base should be easily extendable to other Atari games within the open ai
 gym environment.
 
-Further details of code can be found in the documentation.
+Further details of code can be found in the `documentation: <https://pdghawk.github.io/deepQ-pong>`_.
