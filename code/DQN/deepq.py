@@ -1063,13 +1063,18 @@ class deepQ:
 
             ims = []
             fig = plt.figure()
+            ax = plt.subplot(111)
+            plt.axis('off')
+            ax.set_frame_on(False)
+            ax.set_xticks([])
+            ax.set_yticks([])
 
             print(np.shape(game_arr))
             print(len(game_arr))
             for i in np.arange(len(game_arr)):
 
 
-                im = plt.imshow(game_arr[i,:,:,:], animated=True)
+                im = ax.imshow(game_arr[i,:,:,:], animated=True)
                 ims.append([im])
 
             self.env.close()

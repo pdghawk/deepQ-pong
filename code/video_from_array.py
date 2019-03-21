@@ -23,25 +23,26 @@ import DQN
 
 # ------------------------------------------------------------------------------
 
-game = 'PongDeterministic-v4'
-aws_run=False
-aws_location='2019-03-20/1842'
+#game = 'PongDeterministic-v4'
+game = 'Pong-v0'
+aws_run=True
+aws_location='2019-03-21/1231'
 
 # ------------------------------------------------------------------------------
 if aws_run:
     N_episodes = 300
     HYPERPARAMS = {
-                    'ALPHA':1.0e-3,
+                    'ALPHA':3.0e-4,
                     'GAMMA': 0.99,
                     'EPSILON_H':1.00,
                     'EPSILON_L':0.02,
-                    'EPS_DECAY':70000.0,
-                    'EPI_START':20,
-                    'N_FILTER':16,
-                    'N_FC':256,
-                    'N_memory':250000,
+                    'EPS_DECAY':80000.0,
+                    'EPI_START':40,
+                    'N_FILTER':32,
+                    'N_FC':512,
+                    'N_memory':400000,
                     'N_batch':32,
-                    'UPDATE_FREQ':5001,
+                    'UPDATE_FREQ':5000,
                     'TERMINAL_POINTS':True,
                     'LOSS_SCALE':2.0
                     }

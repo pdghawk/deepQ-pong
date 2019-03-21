@@ -1,0 +1,17 @@
+DQN documentation
+=================
+
+.. _DQN:
+
+DQN API
+----------------------------
+
+.. automodule:: DQN
+
+.. currentmodule:: DQN
+
+.. autosummary::
+     :toctree: stubs
+
+     DQN.Qmemory
+     DQN.deepQ
