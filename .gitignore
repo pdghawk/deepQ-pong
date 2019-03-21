@@ -4,3 +4,4 @@ ckpts/
 aws_runs/
 game_arrays/
 sphinx/
+.DS_store

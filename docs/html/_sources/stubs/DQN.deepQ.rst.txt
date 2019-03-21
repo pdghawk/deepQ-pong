@@ -1,0 +1,33 @@
+DQN.deepQ
+=========
+
+.. currentmodule:: DQN
+
+.. autoclass:: deepQ
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~deepQ.Qnet
+      ~deepQ.__init__
+      ~deepQ.action2step
+      ~deepQ.make_graph
+      ~deepQ.mp4_from_array
+      ~deepQ.play_animated_game
+      ~deepQ.preprocess
+      ~deepQ.save_animated_game_mp4
+      ~deepQ.save_game_array
+      ~deepQ.summary_hist
+      ~deepQ.train
+      ~deepQ.update_layer
+   
+   
+
+   
+   
+   
