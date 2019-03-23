@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DQN.deepQ &mdash; DeepQ-pong 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="AWS Scripts" href="../aws.html" />
+    <link rel="prev" title="DQN.Qmemory" href="DQN.Qmemory.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DeepQ-pong
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Read Me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../DQN.html">DQN documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../DQN.html#module-DQN">DQN API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="DQN.Qmemory.html">DQN.Qmemory</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">DQN.deepQ</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../aws.html">AWS Scripts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DeepQ-pong</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../DQN.html">DQN documentation</a> &raquo;</li>
+        
+      <li>DQN.deepQ</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/stubs/DQN.deepQ.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dqn-deepq">
+<h1>DQN.deepQ<a class="headerlink" href="#dqn-deepq" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="DQN.deepQ">
+<em class="property">class </em><code class="descclassname">DQN.</code><code class="descname">deepQ</code><span class="sig-paren">(</span><em>game</em>, <em>HYPERPARAMS</em>, <em>PARAMS</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object for deep Q learning, for solving openai gym environments</p>
+<p>deep Q network can be used for Q learning, to find the Q function that maximses
+the reward, and effectively therefore gives an optimal stragey for the game.</p>
+<p>The method used here contains various elements of the deepQ algorithm, namely:
+experience replay, double Q learning, online and target networks with strided updates</p>
+<dl class="method">
+<dt id="DQN.deepQ.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>game</em>, <em>HYPERPARAMS</em>, <em>PARAMS</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize</p>
+<p>Initialize the hyperparameters of the model, start the game environment,
+setup the tensorflow graph, start a filenaming convention for results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>HYPERPARAMS</strong> – a dictionary of hyperparameters:
+- ALPHA: learning rate
+- GAMMA: reward discount factor
+- EPSILON_H: initial probability of random actions in training
+- EPSILON_L: lowest probability of random actions in training
+- EPS_DECAY: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
+- EPI_START: episode at which to begin training
+- N_FILTER: Number of filters for initial convolutional layer
+- N_FC: Number of hidden units in fully connected layer
+- N_memory: Number of transitions to store
+- N_batch: The mini-batch size
+- UPDATE_FREQ: how many frames to train on between updates of target network
+- TERMINAL_POINTS: count a single point loss as a terminal move (boolean)
+- LOSS_SCALE: scale on Huber loss, for testing, keep as 2.0</li>
+<li><strong>PARAMS</strong> – A dictionary of parameters of the model:
+- N_x: x dimension of a prepprocessed frame (pixels)
+- N_y: y dimension of a prepprocessed frame (pixels)
+- Nc: number of frames in a single game state
+- N_squash: dimensions in x,y of state after both conv layers applied
+- OUTPUT_STEP: How often (in episodes) to save output summaries
+- MAX_STEPS: max number of frames allowed per episode</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.Qnet" title="DQN.deepQ.Qnet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Qnet</span></code></a>(obs,&nbsp;call_type,&nbsp;trainme,&nbsp;reuseme)</td>
+<td>Neural network to get Q for given state</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.__init__" title="DQN.deepQ.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(game,&nbsp;HYPERPARAMS,&nbsp;PARAMS)</td>
+<td>Initialize</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.action2step" title="DQN.deepQ.action2step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">action2step</span></code></a>(act)</td>
+<td>Convert integer into game action</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.make_graph" title="DQN.deepQ.make_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_graph</span></code></a>()</td>
+<td>Define the computational graph</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.mp4_from_array" title="DQN.deepQ.mp4_from_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mp4_from_array</span></code></a>([dir])</td>
+<td>Save a game to mp4 format, from a saved numpy array</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.play_animated_game" title="DQN.deepQ.play_animated_game"><code class="xref py py-obj docutils literal notranslate"><span class="pre">play_animated_game</span></code></a>()</td>
+<td>Render a game using a checkpoint for policy</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.preprocess" title="DQN.deepQ.preprocess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">preprocess</span></code></a>(frame)</td>
+<td>Preprocess frame of game</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.save_animated_game_mp4" title="DQN.deepQ.save_animated_game_mp4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_animated_game_mp4</span></code></a>([dir])</td>
+<td>save a game to mp4 format</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.save_game_array" title="DQN.deepQ.save_game_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_game_array</span></code></a>([dir])</td>
+<td>Save a game as a 3d array of pixels</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.summary_hist" title="DQN.deepQ.summary_hist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary_hist</span></code></a>(summary_,&nbsp;tag,&nbsp;data,&nbsp;bins)</td>
+<td>Add Histogram to tensorboard summary</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#DQN.deepQ.train" title="DQN.deepQ.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a>(N_episodes)</td>
+<td>Train the DeepQ network</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#DQN.deepQ.update_layer" title="DQN.deepQ.update_layer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_layer</span></code></a>(layer)</td>
+<td>Update the weights/biases of target network</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="DQN.deepQ.Qnet">
+<code class="descname">Qnet</code><span class="sig-paren">(</span><em>obs</em>, <em>call_type</em>, <em>trainme</em>, <em>reuseme</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.Qnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.Qnet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Neural network to get Q for given state</p>
+<p>Structure of the network is:</p>
+<ul class="simple">
+<li>convolutional layer (K=8,S=4) with N_FILTER filters</li>
+<li>convolutional layer (K=4,S=2) with 2*N_FILTER filters</li>
+<li>convolutional layer (K=3,S=1) with 2*N_FILTER filters</li>
+<li>Fully Connected layer with N_FC hidden units</li>
+</ul>
+<p>It takes in input observation (a state of a game), and returns the predicted
+value Q for this action. The maximal position within Q is the policy action.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> – (tensor) set of observations to predict Q for: size: batch,(x,y..),frames
+frames should be 4 to match deepmind paper.</li>
+<li><strong>call_type</strong> – ‘online/’ or ‘target/’ - which network to use</li>
+<li><strong>trainme</strong> – (bool) should the weights be trainable</li>
+<li><strong>reuseme</strong> – (bool) should the weights be reusable</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">output of the Neural Net, which is the predicted Q for the observation</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">z_out</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.action2step">
+<code class="descname">action2step</code><span class="sig-paren">(</span><em>act</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.action2step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.action2step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert integer into game action</p>
+<p>In order that Pong can have only 3 actions (nothing, up, down), rather
+than the 6 (each action replicated) in the gym environment, use a
+preprocessing for the actions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>act</strong> – integer representing an action</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">an integer for the action, act, expected by the game</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">step</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.make_graph">
+<code class="descname">make_graph</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.make_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.make_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the computational graph</p>
+<p>Takes in the game states (before and after action), action, reward, and
+whether terminal as placeholders. Uses these to compute Q values for
+both online and target networks. Applies the double deep Q learning
+algorithm, using self.Qnet as the neural network which predicts the
+Q values for a given state.</p>
+<dl class="docutils">
+<dt>Placeholders: the follwowing variables should be set with a feed_dict</dt>
+<dd><ul class="first last simple">
+<li><a href="#id1"><span class="problematic" id="id2">phi_i_</span></a>: state before action</li>
+<li><a href="#id3"><span class="problematic" id="id4">phi_j_</span></a>: state after action</li>
+<li><a href="#id5"><span class="problematic" id="id6">a_i_</span></a>: action taken</li>
+<li><a href="#id7"><span class="problematic" id="id8">r_i_</span></a>: reward for taking action</li>
+<li><a href="#id9"><span class="problematic" id="id10">t_i_</span></a>: terminal move signifier (0 if final, 1 otherwise)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>dictionary of variables of graph which are useful:</dt>
+<dd><ul class="first last simple">
+<li>graph_init:       graph initializer (global)</li>
+<li>graph_local_init: graph initializer (local)</li>
+<li><a href="#id11"><span class="problematic" id="id12">Q_i_</span></a>:Q values predicted by Qnet on phi_i (online net)</li>
+<li><a href="#id13"><span class="problematic" id="id14">loss_</span></a>:    loss on batch,</li>
+<li>train_op: training tf op</li>
+<li>update_target:updates target network weights to online weights</li>
+<li>merged: op to merge summaries for tensorboard</li>
+<li><a href="#id15"><span class="problematic" id="id16">phi_i_</span></a>: placeholder <a href="#id17"><span class="problematic" id="id18">phi_i_</span></a></li>
+<li><a href="#id19"><span class="problematic" id="id20">phi_j_</span></a>: placeholder <a href="#id21"><span class="problematic" id="id22">phi_j_</span></a></li>
+<li><a href="#id23"><span class="problematic" id="id24">a_i_</span></a>:  placeholder <a href="#id25"><span class="problematic" id="id26">a_i_</span></a>,</li>
+<li><a href="#id27"><span class="problematic" id="id28">r_i_</span></a>:  placeholder <a href="#id29"><span class="problematic" id="id30">r_i_</span></a>,</li>
+<li><a href="#id31"><span class="problematic" id="id32">t_i_</span></a>:  placeholder <a href="#id33"><span class="problematic" id="id34">t_i_</span></a>,</li>
+<li>saver: tf saver for saving meta graph and variables</li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">graph_vars</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.mp4_from_array">
+<code class="descname">mp4_from_array</code><span class="sig-paren">(</span><em>dir='..'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.mp4_from_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.mp4_from_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a game to mp4 format, from a saved numpy array</p>
+<p>The HYPERPARAMS passed to the class inititaion should be the same
+as the HYPERPARAMS that were used for training the model, in order to
+view how that model plays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dir</strong> – (optional) directory in which to look for a directory ‘game_arrays’
+where an array will be attempted to be loaded from, defaults to ‘..’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.play_animated_game">
+<code class="descname">play_animated_game</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.play_animated_game"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.play_animated_game" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render a game using a checkpoint for policy</p>
+<p>The HYPERPARAMS passed to the class inititaion should be the same
+as the HYPERPARAMS that were used for training the model.</p>
+<p>using the env.render functionality a game will be played locally
+on screen.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.preprocess">
+<code class="descname">preprocess</code><span class="sig-paren">(</span><em>frame</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preprocess frame of game</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frame</strong> – a frame of the game</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the preprocessed frame</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">frame_out</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.save_animated_game_mp4">
+<code class="descname">save_animated_game_mp4</code><span class="sig-paren">(</span><em>dir='..'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.save_animated_game_mp4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.save_animated_game_mp4" title="Permalink to this definition">¶</a></dt>
+<dd><p>save a game to mp4 format</p>
+<p>The HYPERPARAMS passed to the class inititaion should be the same
+as the HYPERPARAMS that were used for training the model, in order to
+view how that model plays.</p>
+<p>Using the game will be stored as mp4 using matplotlib animation, via ffmpeg.</p>
+<p>The mp4 will be saved in a directory ‘figs’, on the same level as the ‘code’
+directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dir</strong> – (optional) directory in which to look for a directory ‘ckpts’
+where ckpt will be attempted to be loaded from, defaults to ‘..’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.save_game_array">
+<code class="descname">save_game_array</code><span class="sig-paren">(</span><em>dir='..'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.save_game_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.save_game_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a game as a 3d array of pixels</p>
+<p>The HYPERPARAMS passed to the class inititaion should be the same
+as the HYPERPARAMS that were used for training the model, in order to
+view how that model plays.</p>
+<p>the frames of the game played by the policy is stored in an array, of
+dimension (x,y,number of frames). The x and y dimensions are downsampled
+from the raw frame state to reduce the output size. array will be saved
+by numpy.save(), into a directory ‘game_arrays’ at the same level as ‘code’
+which can be loaded loaded seperately in ‘mp4_from_array’ method to create
+a video of the game.</p>
+<p>Note that when running on an aws instance it is convenient to save the
+array to file on the aws machine, and scp the saved array back to the
+local machine, where one can then create the video.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dir</strong> – (optional) directory in which to look for a directory ‘ckpts’
+where ckpt will be attempted to be loaded from, defaults to ‘..’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.summary_hist">
+<code class="descname">summary_hist</code><span class="sig-paren">(</span><em>summary_</em>, <em>tag</em>, <em>data</em>, <em>bins</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.summary_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.summary_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add Histogram to tensorboard summary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>summary</strong> – a tf summary object to add histogram to</li>
+<li><strong>tag</strong> – a name/tag for the histogram</li>
+<li><strong>data</strong> – The data to be plotted</li>
+<li><strong>bins</strong> – The number of bins for the histogram, or an array of bin edges</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.train">
+<code class="descname">train</code><span class="sig-paren">(</span><em>N_episodes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the DeepQ network</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>N_epsiodes</strong> – how many episodes to train over</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>A dictionary of how various things evolved during during:</dt>
+<dd><ul class="first last simple">
+<li>rewards’:  average reward per epsiode</li>
+<li>’steps’:   average steps per epsiode</li>
+<li>’maxQ’:    average max_Q epsiode</li>
+<li>’minQ’:    average min_Q per epsiode</li>
+<li>’losses’:  average loss per epsiode</li>
+<li>’actions’: average action per epsiode</li>
+<li>’epsilon’: average epsilon per epsiode</li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">out_dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="DQN.deepQ.update_layer">
+<code class="descname">update_layer</code><span class="sig-paren">(</span><em>layer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/DQN/deepq.html#deepQ.update_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DQN.deepQ.update_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the weights/biases of target network</p>
+<p>For stability, it is useful to actively train an online network, and
+only periodically update a target network with the weights and biases of
+the online network. This method updates a gicen layer in the target
+network to be the same as the equivilent layer of the online network</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>layer</strong> – (string) name of layer. e.g. ‘layer0’</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">operator that updates the kernel of the layer
+epd_b: operator that updates the bias of the layer</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">upd_k</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../aws.html" class="btn btn-neutral float-right" title="AWS Scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DQN.Qmemory.html" class="btn btn-neutral float-left" title="DQN.Qmemory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Peter Hawkins
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
