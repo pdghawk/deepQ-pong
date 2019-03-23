@@ -1,9 +1,9 @@
-DQN documentation
-=================
+DQN package documentation
+==========================
 
 .. _DQN:
 
-DQN API
+DQN
 ----------------------------
 
 .. automodule:: DQN
