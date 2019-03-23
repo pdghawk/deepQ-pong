@@ -1,6 +1,6 @@
 """ DQN package for deepQ learning
 
-This module provides methods for applying deep Q learning to atari games, with a
+This package provides methods for applying deep Q learning to atari games, with a
 focus on the game 'pong'
 
 This package contains two classes:
