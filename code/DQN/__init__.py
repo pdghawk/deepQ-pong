@@ -1,9 +1,9 @@
-""" DQN module for deepQ learning
+""" DQN package for deepQ learning
 
 This module provides methods for applying deep Q learning to atari games, with a
 focus on the game 'pong'
 
-This module contains two classes:
+This package contains two classes:
 
 Qmemory: for storing and retrieving 'experience memory' of an agent, and
 deepQ: which contains a series of methods for trainingm and testing agents
