@@ -198,27 +198,29 @@
 <span class="sd">        setup the tensorflow graph, start a filenaming convention for results.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            HYPERPARAMS: a dictionary of hyperparameters:</span>
-<span class="sd">                - ALPHA: learning rate</span>
-<span class="sd">                - GAMMA: reward discount factor</span>
-<span class="sd">                - EPSILON_H: initial probability of random actions in training</span>
-<span class="sd">                - EPSILON_L: lowest probability of random actions in training</span>
-<span class="sd">                - EPS_DECAY: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))</span>
-<span class="sd">                - EPI_START: episode at which to begin training</span>
-<span class="sd">                - N_FILTER: Number of filters for initial convolutional layer</span>
-<span class="sd">                - N_FC: Number of hidden units in fully connected layer</span>
-<span class="sd">                - N_memory: Number of transitions to store</span>
-<span class="sd">                - N_batch: The mini-batch size</span>
-<span class="sd">                - UPDATE_FREQ: how many frames to train on between updates of target network</span>
-<span class="sd">                - TERMINAL_POINTS: count a single point loss as a terminal move (boolean)</span>
-<span class="sd">                - LOSS_SCALE: scale on Huber loss, for testing, keep as 2.0</span>
-<span class="sd">            PARAMS: A dictionary of parameters of the model:</span>
-<span class="sd">                - N_x: x dimension of a prepprocessed frame (pixels)</span>
-<span class="sd">                - N_y: y dimension of a prepprocessed frame (pixels)</span>
-<span class="sd">                - Nc: number of frames in a single game state</span>
-<span class="sd">                - N_squash: dimensions in x,y of state after both conv layers applied</span>
-<span class="sd">                - OUTPUT_STEP: How often (in episodes) to save output summaries</span>
-<span class="sd">                - MAX_STEPS: max number of frames allowed per episode</span>
+<span class="sd">            HYPERPARAMS:</span>
+<span class="sd">                a dictionary of hyperparameters:</span>
+
+<span class="sd">                * **ALPHA**: learning rate</span>
+<span class="sd">                * **GAMMA**: reward discount factor</span>
+<span class="sd">                * **EPSILON_H**: initial probability of random actions in training</span>
+<span class="sd">                * **EPSILON_L**: lowest probability of random actions in training</span>
+<span class="sd">                * **EPS_DECAY**: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))</span>
+<span class="sd">                * **EPI_START**: episode at which to begin training</span>
+<span class="sd">                * **N_FILTER**: Number of filters for initial convolutional layer</span>
+<span class="sd">                * **N_FC**: Number of hidden units in fully connected layer</span>
+<span class="sd">                * **N_memory**: Number of transitions to store</span>
+<span class="sd">                * **N_batch**: The mini-batch size</span>
+<span class="sd">                * **UPDATE_FREQ**: how many frames to train on between updates of target network</span>
+<span class="sd">                * **TERMINAL_POINTS**: count a single point loss as a terminal move (boolean)</span>
+<span class="sd">                * **LOSS_SCALE**: scale on Huber loss, for testing, keep as 2.0</span>
+
+<span class="sd">            PARAMS:</span>
+<span class="sd">                A dictionary of parameters of the model:</span>
+
+<span class="sd">               - **Nc**: number of frames in a single game state</span>
+<span class="sd">               - **OUTPUT_STEP**: How often (in episodes) to save output summaries</span>
+<span class="sd">               - **MAX_STEPS**: max number of frames allowed per episode</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -423,28 +425,32 @@
 <span class="sd">        Q values for a given state.</span>
 
 
-<span class="sd">        Placeholders: the follwowing variables should be set with a feed_dict</span>
-<span class="sd">                - phi_i_: state before action</span>
-<span class="sd">                - phi_j_: state after action</span>
-<span class="sd">                - a_i_: action taken</span>
-<span class="sd">                - r_i_: reward for taking action</span>
-<span class="sd">                - t_i_: terminal move signifier (0 if final, 1 otherwise)</span>
+<span class="sd">        Placeholders:</span>
+<span class="sd">            the following variables should be set with a feed_dict</span>
+
+<span class="sd">            - **phi_i\_**: state before action</span>
+<span class="sd">            - **phi_j\_**: state after action</span>
+<span class="sd">            - **a_i\_**: action taken</span>
+<span class="sd">            - **r_i\_**: reward for taking action</span>
+<span class="sd">            - **t_i\_**: terminal move signifier (0 if final, 1 otherwise)</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            graph_vars: dictionary of variables of graph which are useful:</span>
-<span class="sd">                        - graph_init:       graph initializer (global)</span>
-<span class="sd">                        - graph_local_init: graph initializer (local)</span>
-<span class="sd">                        - Q_i_:Q values predicted by Qnet on phi_i (online net)</span>
-<span class="sd">                        - loss_:    loss on batch,</span>
-<span class="sd">                        - train_op: training tf op</span>
-<span class="sd">                        - update_target:updates target network weights to online weights</span>
-<span class="sd">                        - merged: op to merge summaries for tensorboard</span>
-<span class="sd">                        - phi_i_: placeholder phi_i_</span>
-<span class="sd">                        - phi_j_: placeholder phi_j_</span>
-<span class="sd">                        - a_i_:  placeholder a_i_,</span>
-<span class="sd">                        - r_i_:  placeholder r_i_,</span>
-<span class="sd">                        - t_i_:  placeholder t_i_,</span>
-<span class="sd">                        - saver: tf saver for saving meta graph and variables</span>
+<span class="sd">            graph_vars:</span>
+<span class="sd">                dictionary of variables of graph which are useful:</span>
+
+<span class="sd">                - **graph_init**:       graph initializer (global)</span>
+<span class="sd">                - **graph_local_init**: graph initializer (local)</span>
+<span class="sd">                - **Q_i\_**:Q values predicted by Qnet on phi_i (online net)</span>
+<span class="sd">                - **loss\_**:    loss on batch,</span>
+<span class="sd">                - **train_op**: training tf op</span>
+<span class="sd">                - **update_target**: updates target network weights to online weights</span>
+<span class="sd">                - **merged**: op to merge summaries for tensorboard</span>
+<span class="sd">                - **phi_i\_**: placeholder phi_i\_</span>
+<span class="sd">                - **phi_j\_**: placeholder phi_j\_</span>
+<span class="sd">                - **a_i\_**:  placeholder a_i\_,</span>
+<span class="sd">                - **r_i\_**:  placeholder r_i\_,</span>
+<span class="sd">                - **t_i\_**:  placeholder t_i\_,</span>
+<span class="sd">                - **saver**: tf saver for saving meta graph and variables</span>
 
 
 <span class="sd">        &quot;&quot;&quot;</span>

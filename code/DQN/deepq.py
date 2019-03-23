@@ -48,27 +48,29 @@ class deepQ:
         setup the tensorflow graph, start a filenaming convention for results.
 
         Args:
-            HYPERPARAMS: a dictionary of hyperparameters:
-                - ALPHA: learning rate
-                - GAMMA: reward discount factor
-                - EPSILON_H: initial probability of random actions in training
-                - EPSILON_L: lowest probability of random actions in training
-                - EPS_DECAY: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
-                - EPI_START: episode at which to begin training
-                - N_FILTER: Number of filters for initial convolutional layer
-                - N_FC: Number of hidden units in fully connected layer
-                - N_memory: Number of transitions to store
-                - N_batch: The mini-batch size
-                - UPDATE_FREQ: how many frames to train on between updates of target network
-                - TERMINAL_POINTS: count a single point loss as a terminal move (boolean)
-                - LOSS_SCALE: scale on Huber loss, for testing, keep as 2.0
-            PARAMS: A dictionary of parameters of the model:
-                - N_x: x dimension of a prepprocessed frame (pixels)
-                - N_y: y dimension of a prepprocessed frame (pixels)
-                - Nc: number of frames in a single game state
-                - N_squash: dimensions in x,y of state after both conv layers applied
-                - OUTPUT_STEP: How often (in episodes) to save output summaries
-                - MAX_STEPS: max number of frames allowed per episode
+            HYPERPARAMS:
+                a dictionary of hyperparameters:
+
+                * **ALPHA**: learning rate
+                * **GAMMA**: reward discount factor
+                * **EPSILON_H**: initial probability of random actions in training
+                * **EPSILON_L**: lowest probability of random actions in training
+                * **EPS_DECAY**: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
+                * **EPI_START**: episode at which to begin training
+                * **N_FILTER**: Number of filters for initial convolutional layer
+                * **N_FC**: Number of hidden units in fully connected layer
+                * **N_memory**: Number of transitions to store
+                * **N_batch**: The mini-batch size
+                * **UPDATE_FREQ**: how many frames to train on between updates of target network
+                * **TERMINAL_POINTS**: count a single point loss as a terminal move (boolean)
+                * **LOSS_SCALE**: scale on Huber loss, for testing, keep as 2.0
+
+            PARAMS:
+                A dictionary of parameters of the model:
+
+               - **Nc**: number of frames in a single game state
+               - **OUTPUT_STEP**: How often (in episodes) to save output summaries
+               - **MAX_STEPS**: max number of frames allowed per episode
 
         """
 
@@ -273,28 +275,32 @@ class deepQ:
         Q values for a given state.
 
 
-        Placeholders: the follwowing variables should be set with a feed_dict
-                - phi_i_: state before action
-                - phi_j_: state after action
-                - a_i_: action taken
-                - r_i_: reward for taking action
-                - t_i_: terminal move signifier (0 if final, 1 otherwise)
+        Placeholders:
+            the following variables should be set with a feed_dict
+
+            - **phi_i\_**: state before action
+            - **phi_j\_**: state after action
+            - **a_i\_**: action taken
+            - **r_i\_**: reward for taking action
+            - **t_i\_**: terminal move signifier (0 if final, 1 otherwise)
 
         Returns:
-            graph_vars: dictionary of variables of graph which are useful:
-                        - graph_init:       graph initializer (global)
-                        - graph_local_init: graph initializer (local)
-                        - Q_i_:Q values predicted by Qnet on phi_i (online net)
-                        - loss_:    loss on batch,
-                        - train_op: training tf op
-                        - update_target:updates target network weights to online weights
-                        - merged: op to merge summaries for tensorboard
-                        - phi_i_: placeholder phi_i_
-                        - phi_j_: placeholder phi_j_
-                        - a_i_:  placeholder a_i_,
-                        - r_i_:  placeholder r_i_,
-                        - t_i_:  placeholder t_i_,
-                        - saver: tf saver for saving meta graph and variables
+            graph_vars:
+                dictionary of variables of graph which are useful:
+
+                - **graph_init**:       graph initializer (global)
+                - **graph_local_init**: graph initializer (local)
+                - **Q_i\_**:Q values predicted by Qnet on phi_i (online net)
+                - **loss\_**:    loss on batch,
+                - **train_op**: training tf op
+                - **update_target**: updates target network weights to online weights
+                - **merged**: op to merge summaries for tensorboard
+                - **phi_i\_**: placeholder phi_i\_
+                - **phi_j\_**: placeholder phi_j\_
+                - **a_i\_**:  placeholder a_i\_,
+                - **r_i\_**:  placeholder r_i\_,
+                - **t_i\_**:  placeholder t_i\_,
+                - **saver**: tf saver for saving meta graph and variables
 
 
         """

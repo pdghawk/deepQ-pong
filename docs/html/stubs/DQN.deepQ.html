@@ -181,27 +181,30 @@ setup the tensorflow graph, start a filenaming convention for results.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>HYPERPARAMS</strong> – a dictionary of hyperparameters:
-- ALPHA: learning rate
-- GAMMA: reward discount factor
-- EPSILON_H: initial probability of random actions in training
-- EPSILON_L: lowest probability of random actions in training
-- EPS_DECAY: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
-- EPI_START: episode at which to begin training
-- N_FILTER: Number of filters for initial convolutional layer
-- N_FC: Number of hidden units in fully connected layer
-- N_memory: Number of transitions to store
-- N_batch: The mini-batch size
-- UPDATE_FREQ: how many frames to train on between updates of target network
-- TERMINAL_POINTS: count a single point loss as a terminal move (boolean)
-- LOSS_SCALE: scale on Huber loss, for testing, keep as 2.0</li>
-<li><strong>PARAMS</strong> – A dictionary of parameters of the model:
-- N_x: x dimension of a prepprocessed frame (pixels)
-- N_y: y dimension of a prepprocessed frame (pixels)
-- Nc: number of frames in a single game state
-- N_squash: dimensions in x,y of state after both conv layers applied
-- OUTPUT_STEP: How often (in episodes) to save output summaries
-- MAX_STEPS: max number of frames allowed per episode</li>
+<li><strong>HYPERPARAMS</strong> – <p>a dictionary of hyperparameters:</p>
+<ul>
+<li><strong>ALPHA</strong>: learning rate</li>
+<li><strong>GAMMA</strong>: reward discount factor</li>
+<li><strong>EPSILON_H</strong>: initial probability of random actions in training</li>
+<li><strong>EPSILON_L</strong>: lowest probability of random actions in training</li>
+<li><strong>EPS_DECAY</strong>: decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))</li>
+<li><strong>EPI_START</strong>: episode at which to begin training</li>
+<li><strong>N_FILTER</strong>: Number of filters for initial convolutional layer</li>
+<li><strong>N_FC</strong>: Number of hidden units in fully connected layer</li>
+<li><strong>N_memory</strong>: Number of transitions to store</li>
+<li><strong>N_batch</strong>: The mini-batch size</li>
+<li><strong>UPDATE_FREQ</strong>: how many frames to train on between updates of target network</li>
+<li><strong>TERMINAL_POINTS</strong>: count a single point loss as a terminal move (boolean)</li>
+<li><strong>LOSS_SCALE</strong>: scale on Huber loss, for testing, keep as 2.0</li>
+</ul>
+</li>
+<li><strong>PARAMS</strong> – <p>A dictionary of parameters of the model:</p>
+<ul>
+<li><strong>Nc</strong>: number of frames in a single game state</li>
+<li><strong>OUTPUT_STEP</strong>: How often (in episodes) to save output summaries</li>
+<li><strong>MAX_STEPS</strong>: max number of frames allowed per episode</li>
+</ul>
+</li>
 </ul>
 </td>
 </tr>
@@ -321,13 +324,14 @@ both online and target networks. Applies the double deep Q learning
 algorithm, using self.Qnet as the neural network which predicts the
 Q values for a given state.</p>
 <dl class="docutils">
-<dt>Placeholders: the follwowing variables should be set with a feed_dict</dt>
-<dd><ul class="first last simple">
-<li><a href="#id1"><span class="problematic" id="id2">phi_i_</span></a>: state before action</li>
-<li><a href="#id3"><span class="problematic" id="id4">phi_j_</span></a>: state after action</li>
-<li><a href="#id5"><span class="problematic" id="id6">a_i_</span></a>: action taken</li>
-<li><a href="#id7"><span class="problematic" id="id8">r_i_</span></a>: reward for taking action</li>
-<li><a href="#id9"><span class="problematic" id="id10">t_i_</span></a>: terminal move signifier (0 if final, 1 otherwise)</li>
+<dt>Placeholders:</dt>
+<dd><p class="first">the following variables should be set with a feed_dict</p>
+<ul class="last simple">
+<li><strong>phi_i_</strong>: state before action</li>
+<li><strong>phi_j_</strong>: state after action</li>
+<li><strong>a_i_</strong>: action taken</li>
+<li><strong>r_i_</strong>: reward for taking action</li>
+<li><strong>t_i_</strong>: terminal move signifier (0 if final, 1 otherwise)</li>
 </ul>
 </dd>
 </dl>
@@ -335,25 +339,21 @@ Q values for a given state.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>dictionary of variables of graph which are useful:</dt>
-<dd><ul class="first last simple">
-<li>graph_init:       graph initializer (global)</li>
-<li>graph_local_init: graph initializer (local)</li>
-<li><a href="#id11"><span class="problematic" id="id12">Q_i_</span></a>:Q values predicted by Qnet on phi_i (online net)</li>
-<li><a href="#id13"><span class="problematic" id="id14">loss_</span></a>:    loss on batch,</li>
-<li>train_op: training tf op</li>
-<li>update_target:updates target network weights to online weights</li>
-<li>merged: op to merge summaries for tensorboard</li>
-<li><a href="#id15"><span class="problematic" id="id16">phi_i_</span></a>: placeholder <a href="#id17"><span class="problematic" id="id18">phi_i_</span></a></li>
-<li><a href="#id19"><span class="problematic" id="id20">phi_j_</span></a>: placeholder <a href="#id21"><span class="problematic" id="id22">phi_j_</span></a></li>
-<li><a href="#id23"><span class="problematic" id="id24">a_i_</span></a>:  placeholder <a href="#id25"><span class="problematic" id="id26">a_i_</span></a>,</li>
-<li><a href="#id27"><span class="problematic" id="id28">r_i_</span></a>:  placeholder <a href="#id29"><span class="problematic" id="id30">r_i_</span></a>,</li>
-<li><a href="#id31"><span class="problematic" id="id32">t_i_</span></a>:  placeholder <a href="#id33"><span class="problematic" id="id34">t_i_</span></a>,</li>
-<li>saver: tf saver for saving meta graph and variables</li>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of variables of graph which are useful:<ul class="simple">
+<li><strong>graph_init</strong>:       graph initializer (global)</li>
+<li><strong>graph_local_init</strong>: graph initializer (local)</li>
+<li><strong>Q_i_</strong>:Q values predicted by Qnet on phi_i (online net)</li>
+<li><strong>loss_</strong>:    loss on batch,</li>
+<li><strong>train_op</strong>: training tf op</li>
+<li><strong>update_target</strong>: updates target network weights to online weights</li>
+<li><strong>merged</strong>: op to merge summaries for tensorboard</li>
+<li><strong>phi_i_</strong>: placeholder phi_i_</li>
+<li><strong>phi_j_</strong>: placeholder phi_j_</li>
+<li><strong>a_i_</strong>:  placeholder a_i_,</li>
+<li><strong>r_i_</strong>:  placeholder r_i_,</li>
+<li><strong>t_i_</strong>:  placeholder t_i_,</li>
+<li><strong>saver</strong>: tf saver for saving meta graph and variables</li>
 </ul>
-</dd>
-</dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">graph_vars</td>
