@@ -23,9 +23,14 @@ import DQN
 
 # ------------------------------------------------------------------------------
 
+# choose the type of game to play
 #game = 'PongDeterministic-v4'
 game = 'Pong-v0'
+
+# will this be running on an aws instance, or obtaining data from an aws run
 aws_run=True
+
+# where should the code look for game array data from which to create a video
 aws_location='2019-03-21/1650'
 
 # ------------------------------------------------------------------------------
@@ -76,9 +81,16 @@ else:
 
 
 
-
+# create a deepQ object, i.e set up a deepQ-learning agent, the hyperparameters
+# should match a game already trained with single_train.py or equivilent code, and
+# for which an array representing the gameplay has been created with play_from_ckpt.py
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
+
+# create the video from the game array, game array will load automatically according
+# to the hyperparameters specified.
 if aws_run:
+    # look in aws_location for the files
     deepQ.mp4_from_array('../aws_runs/'+aws_location)
 else:
+    # use the defualt search path ('..')
     deepQ.mp4_from_array()

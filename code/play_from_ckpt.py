@@ -17,28 +17,22 @@ import numpy as np
 
 import DQN
 
-import matplotlib #.pyplot as plt
-matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
+import matplotlib
+matplotlib.use('TkAgg') # make figure in focus
 import matplotlib.pyplot as plt
 
-
 # ------------------------------------------------------------------------------
 
-matplotlib.rcParams['lines.linewidth']  = 1.5
-matplotlib.rcParams['axes.linewidth']   = 1.5
-matplotlib.rcParams['font.weight']      = 'bold'
-matplotlib.rcParams['axes.labelweight'] = 'bold'
-matplotlib.rcParams['font.size']        = 10
-matplotlib.rcParams['legend.frameon']   = False
-matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
-#sns.set()
-# ------------------------------------------------------------------------------
-
+# choose the type of game to play
 game = 'PongDeterministic-v4'
+
+# will this be running on an aws instance
 aws_run = False
-aws_location='2019-03-09/1602'
+
 
 # ------------------------------------------------------------------------------
+
+# set up the models hyperparameters, and parameters
 
 if aws_run:
     N_episodes = 300
@@ -84,7 +78,9 @@ else:
                 'MAX_STEPS': 20000
                 }
 
-
+# create a deepQ object, i.e set up a deepQ-learning agent, the hyperparameters
+# should match a game already trained with single_train.py or equivilent code
 deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-
+# play a game from pre trained checkpoint data (pre-loads according to the
+# hyperparameters selected above) and save the game as an array
 deepQ.save_game_array()

@@ -19,7 +19,7 @@ import gym
 
 import DQN
 
-import matplotlib #.pyplot as plt
+import matplotlib 
 matplotlib.use('TkAgg') # this makes the fgire in focus rather than temrinal
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -40,28 +40,15 @@ matplotlib.rcParams['figure.figsize']   = (22/2.54, 15/2.54)
 
 
 # ------------------------------------------------------------------------------
-#game = 'PongNoFrameskip-v4'
-#game = 'PongDeterministic-v4'
+# choose the type of game to play
 game = 'Pong-v0'
 
-aws_run = True
+# will this be running on an aws instance
+aws_run = False # True
 
+# plot the results to screen (tensorboard will run regardless)
+plot_results=True
 # ------------------------------------------------------------------------------
-
-
-# env=gym.make(game)
-#
-# env.reset()
-#
-# frame, reward, done, tmp = env.step(env.action_space.sample())
-#
-# o1 = int( ( (84-8)/4 ) + 1 )
-# print(o1)
-# o2 = int( ( (o1-4)/2 ) + 1 )
-# print(o2)
-# o3 = int( ( (o2-3)/1) + 1)
-# print(o3)
-# N_squash = o3
 
 #
 if aws_run:
@@ -111,17 +98,27 @@ else:
 
 
 
+# ------------------------------------------------------------------------------
+
+# set up a series of hyperparameter scans
+
+# A better way to to do this would be a grid search over all hyperparams (or those
+# suspected to be most important), or a random search, which will often outperform
+# a grid search.
+
 results = []
 alpha_vec = np.array([1.0e-6,1.0e-4,1.0e-2])
-update_vec = np.array([5000])
+update_vec = np.array([1000,5000,10000])
 batch_vec = np.array([32,64,128])
 loss_scale_vec = np.array([1.0,2.0,4.0,10.0])
 decay_vec = np.array([5.0e3]) #,1.0e4,2.0e4])
 rate_inc_vec = np.array([2,4,6])
 
-do_alpha=False
+# select which scan you want to run
 
 run_type = 'update_freq'
+
+# set variables according to choice of hyperparameter to scan
 
 if run_type=='alpha':
     vals = alpha_vec
@@ -144,7 +141,7 @@ elif run_type=='rate_increase':
 else:
     print('Unknown_run_type')
 
-
+# for each value in the hyperparameter scan, reset the hyperparameter dictionary
 
 for i in np.arange(len(vals)):
     if run_type=='alpha':
@@ -168,45 +165,42 @@ for i in np.arange(len(vals)):
     else:
         print('Unknown run_type')
 
-
-
+    # create a deepQ object, i.e set up a deepQ-learning agent
     deepQ = DQN.deepQ(game, HYPERPARAMS, PARAMS)
-    print("here")
+    # train the model
     tmp_dict = deepQ.train(N_episodes)
-    #deepQ.game(1)
+    # append the results of the training to results
+    results.append(tmp_dict)
 
-    # results.append(deepQ.train(N_episodes))
+# optionally plot the results of the scan.
 
+if plot_results:
+    OUTPUT_STEP = PARAMS['OUTPUT_STEP']
+    ep_vec=OUTPUT_STEP*(1+np.arange(int(N_episodes/OUTPUT_STEP) ) )
 
-# OUTPUT_STEP = PARAMS['OUTPUT_STEP']
-# ep_vec=OUTPUT_STEP*(1+np.arange(int(N_episodes/OUTPUT_STEP) ) )
-#
-# cols = matplotlib.cm.jet(np.linspace(0,1,len(vals)))
-#
-# fig,axes = plt.subplots(2,2)
-# for i in np.arange(len(vals)):
-#     print(results[i]['steps'])
-#     axes[0,0].plot(ep_vec,results[i]['rewards'],color=cols[i],label = label0+str(vals[i]))
-#     axes[0,0].set_ylabel('avg reward')
-#     axes[0,0].set_xlim([0,N_episodes])
-#
-#     axes[0,1].plot(ep_vec,0.5*(results[i]['maxQ']+results[i]['minQ']),color=cols[i],label = label0+str(vals[i]))
-#     axes[0,1].set_ylabel('avg Q')
-#     axes[0,1].set_xlim([0,N_episodes])
-#
-#     axes[1,0].plot(ep_vec,results[i]['actions'],color=cols[i],label = label0+str(vals[i]))
-#     #axes[1,0].plot(ep_vec,results[i]['epsilon'],'k',label = label0+str(vals[i]))
-#     axes[1,0].set_ylabel('avg action')
-#     axes[1,0].set_xlim([0,N_episodes])
-#     #axes[1,0].set_ylim([0,1])
-#
-#     axes[1,1].plot(ep_vec,results[i]['losses'],color=cols[i],label = label0+str(vals[i]))
-#     axes[1,1].set_ylabel('avg loss')
-#     axes[1,1].set_xlim([0,N_episodes])
-#
-# plt.legend(frameon=False)
-# plt.tight_layout()
-# plt.show()
+    cols = matplotlib.cm.jet(np.linspace(0,1,len(vals)))
 
-    # plt.plot(ep_vec, results[0]['epsilon'],'k')
-    # plt.show()
+    fig,axes = plt.subplots(2,2)
+    for i in np.arange(len(vals)):
+        print(results[i]['steps'])
+        axes[0,0].plot(ep_vec,results[i]['rewards'],color=cols[i],label = label0+str(vals[i]))
+        axes[0,0].set_ylabel('avg reward')
+        axes[0,0].set_xlim([0,N_episodes])
+
+        axes[0,1].plot(ep_vec,0.5*(results[i]['maxQ']+results[i]['minQ']),color=cols[i],label = label0+str(vals[i]))
+        axes[0,1].set_ylabel('avg Q')
+        axes[0,1].set_xlim([0,N_episodes])
+
+        axes[1,0].plot(ep_vec,results[i]['actions'],color=cols[i],label = label0+str(vals[i]))
+        #axes[1,0].plot(ep_vec,results[i]['epsilon'],'k',label = label0+str(vals[i]))
+        axes[1,0].set_ylabel('avg action')
+        axes[1,0].set_xlim([0,N_episodes])
+        #axes[1,0].set_ylim([0,1])
+
+        axes[1,1].plot(ep_vec,results[i]['losses'],color=cols[i],label = label0+str(vals[i]))
+        axes[1,1].set_ylabel('avg loss')
+        axes[1,1].set_xlim([0,N_episodes])
+
+    plt.legend(frameon=False)
+    plt.tight_layout()
+    plt.show()
