@@ -31,6 +31,34 @@ aws_run = False
 # be smaller for easier testing
 
 # ------------------------------------------------------------------------------
+
+# We will set up dictionaries of Hyperparameters (HYPERPARAMS), and parameters
+# (PARAMS) of the model to be passed to the DQN.
+
+# See the deepQ-pong documentation, and in particular the DQN package docs, for
+# further details.
+
+# HYPERPARAMS should consist of:
+ # - 'ALPHA': learning rate
+ # - 'GAMMA': reward discount factor
+ # - 'EPSILON_H': initial probability of random actions in training
+ # - 'EPSILON_L': lowest probability of random actions in training
+ # - 'EPS_DECAY': decay rate (units of frames) of epsilon (exp(-frame/EPS_DECAY))
+ # - 'EPI_START': episode at which to begin training
+ # - 'N_FILTER': Number of filters for initial convolutional layer
+ # - 'N_FC': Number of hidden units in fully connected layer
+ # - 'N_memory': Number of transitions to store
+ # - 'N_batch': The mini-batch size
+ # - 'UPDATE_FREQ': how many frames to train on between updates of target network
+ # - 'TERMINAL_POINTS': count a single point loss as a terminal move (boolean)
+ # - 'LOSS_SCALE': scale on Huber loss, for testing, keep as 2.0
+
+# PARAMS should consist of:
+ # - 'Nc': number of frames in a single game state
+ # - 'OUTPUT_STEP': How often (in episodes) to save output summaries
+ # - 'MAX_STEPS': max number of frames allowed per episode
+
+# ------------------------------------------------------------------------------
 if aws_run:
     N_episodes = 400
     HYPERPARAMS = {
