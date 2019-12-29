@@ -34,7 +34,7 @@ class TripleConvQnet(Qnet):
         o3 = int( ( (o2-3)/1) + 1)
         self.conv_squash_factor = o3
 
-    def run(self,obs,call_type,trainme=True,reuseme=False):
+    def run(self,obs,call_type,trainme,reuseme):
         """ Neural network to get Q for given state
 
         Structure of the network is:
