@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-from abc import ABC
+from abc import ABC,abstractmethod
 
 class Qnet(ABC):
     def __init__(self,N_x=1,N_y=1,frames=1):
@@ -10,7 +10,7 @@ class Qnet(ABC):
         self.frames=frames
         pass
 
-    def set_dimensions(N_x,N_y,frames,output_dimension):
+    def set_dimensions(self,N_x,N_y,frames,output_dimension):
         self.N_x=N_x
         self.N_y=N_y
         self.frames=frames
@@ -27,14 +27,14 @@ class TripleConvQnet(Qnet):
         self.conv_filters=conv_filters
         self.fc_units=fc_units
 
-    def set_dimensions(N_x,N_y,frames,output_dimension):
+    def set_dimensions(self,N_x,N_y,frames,output_dimension):
         super().set_dimensions(N_x,N_y,frames,output_dimension)
-        o1 = int( ( (self.PARAMS['N_x']-8)/4 ) + 1 )
+        o1 = int( ( (self.N_x-8)/4 ) + 1 )
         o2 = int( ( (o1-4)/2 ) + 1 )
         o3 = int( ( (o2-3)/1) + 1)
         self.conv_squash_factor = o3
 
-    def run(self,obs,call_type,trainme=True,reuseme=True):
+    def run(self,obs,call_type,trainme=True,reuseme=False):
         """ Neural network to get Q for given state
 
         Structure of the network is:
