@@ -8,7 +8,7 @@ class Qnet(ABC):
         self.N_x=N_x
         self.N_y=N_y
         self.frames=frames
-        pass
+        self.output_dimension=None
 
     def set_dimensions(self,N_x,N_y,frames,output_dimension):
         self.N_x=N_x
@@ -18,6 +18,10 @@ class Qnet(ABC):
 
     @abstractmethod
     def run(self):
+        pass
+
+    @abstractmethod
+    def get_layer_names(self):
         pass
 
 class TripleConvQnet(Qnet):
@@ -34,7 +38,7 @@ class TripleConvQnet(Qnet):
         o3 = int( ( (o2-3)/1) + 1)
         self.conv_squash_factor = o3
 
-    def run(self,obs,call_type,trainme=True,reuseme=False):
+    def run(self,obs,call_type,trainme,reuseme):
         """ Neural network to get Q for given state
 
         Structure of the network is:
@@ -100,3 +104,7 @@ class TripleConvQnet(Qnet):
                 z_out = tf.layers.Dense(units=self.output_dimension,trainable=trainme,kernel_initializer=tf.keras.initializers.he_normal())(z_FC0)
 
         return z_out
+
+    def get_layer_names(self):
+        return ['conv_layer0/conv2d','conv_layer1/conv2d','conv_layer2/conv2d',
+                 'FC_layer0/dense','layer_out/dense']
