@@ -127,11 +127,38 @@ class TrainingGraphFactory(ABC):
         t_i   = tf.placeholder(shape=[None,1],dtype=tf.float32)
         return phi_i,phi_j,a_i,r_i,t_i
 
+    def q_i_online(self,phi_i):
+        with tf.name_scope('Q_i_online'):
+            q = self.q_net.run(phi_i,'online',True,False)
+        return q
+
+    def value_function_i_online(self,a_i,q_i,output_dimension):
+        with tf.name_scope('Value_function_i_online'):
+            # convert actions that were taken into onehot format
+            a_list = tf.reshape(tf.cast(a_i,tf.int32),[-1])
+            #print("a_list shape = ",a_list.shape)
+
+            a_onehot = tf.one_hot(a_list, output_dimension)
+            #print(a_onehot.shape)
+
+            # now use the onehot format actions to select the Q_i's that are actually
+            # obtained by taking action a_i. n.b Qnet returns a value for Q for all actions
+            # but we only want to know Q for the action taken
+
+            v_i_tmp = tf.multiply(a_onehot,q_i)
+            #print(V_i_tmp.shape)
+            v_i = tf.reduce_sum(v_i_tmp, axis=1)
+            #print(V_i_.shape)
+        return v_i
+
+
+
     def make(self,graph,Nx,Ny,frames,output_dimension):
         # if( any(i is None for i in [self.N_x,self.N_y,self.frames] )):
         #     raise RuntimeError("call TrainingGraphFactory.setup()")
         with graph.as_default():
             return self._build_graph(Nx,Ny,frames,output_dimension)
+
 
 class DDQNTrainingGraphFactory(TrainingGraphFactory):
 
@@ -141,27 +168,10 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
         phi_i,phi_j,a_i,r_i,t_i = self.set_placeholders(Nx,Ny,frames)
 
         # ------------------------------------------------------------------
-        with tf.name_scope('Q_i_online'):
-            Q_i_ = self.q_net.run(phi_i,'online',True,False)
-            #print("Q_i_ shape         = ",Q_i_.shape)
+        # get online Q
+        Q_i = self.q_i_online(phi_i)
 
-        with tf.name_scope('Value_function_i_online'):
-            # convert actions that were taken into onehot format
-            a_list = tf.reshape(tf.cast(a_i,tf.int32),[-1])
-            print("a_list shape = ",a_list.shape)
-
-            a_onehot = tf.one_hot(a_list, output_dimension)
-            print(a_onehot.shape)
-
-            # now use the onehot format actions to select the Q_i's that are actually
-            # obtained by taking action a_i. n.b Qnet returns a value for Q for all actions
-            # but we only want to know Q for the action taken
-
-            V_i_tmp = tf.multiply(a_onehot,Q_i_)
-            print(V_i_tmp.shape)
-            V_i_ = tf.reduce_sum(V_i_tmp, axis=1)
-            print(V_i_.shape)
-
+        V_i = self.value_function_i_online(a_i,Q_i,output_dimension)
 
         # ------------------------------------------------------------------
         # we need to get the actions to take on the Q_target step, by using the expected action
@@ -200,7 +210,7 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
         # difference between value function (future discounted) and the value
         # funtion on state i
         with tf.name_scope('discount_take_value'):
-            x_    = tf.subtract( y_, V_i_  )
+            x_    = tf.subtract( y_, V_i  )
 
         print("x_ shape = ",x_.shape)
 
@@ -244,7 +254,7 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
 
         graph_vars = {'graph_init':graph_init,
                         'graph_local_init':graph_local_init,
-                        'Q_i':Q_i_,
+                        'Q_i':Q_i,
                         'loss':loss_,
                         'train_op':train_op,
                         'update_target':update_target,
