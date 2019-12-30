@@ -119,6 +119,14 @@ class TrainingGraphFactory(ABC):
             upd_b = tf.assign(b_target,b_online)
         return upd_k,upd_b
 
+    def set_placeholders(self,Nx,Ny,frames):
+        phi_i = tf.placeholder(shape=[None,Nx,Ny,frames],dtype=tf.float32)
+        phi_j = tf.placeholder(shape=[None,Nx,Ny,frames],dtype=tf.float32)
+        a_i   = tf.placeholder(shape=[None,1],dtype=tf.uint8)
+        r_i   = tf.placeholder(shape=[None,1],dtype=tf.float32)
+        t_i   = tf.placeholder(shape=[None,1],dtype=tf.float32)
+        return phi_i,phi_j,a_i,r_i,t_i
+
     def make(self,graph,Nx,Ny,frames,output_dimension):
         # if( any(i is None for i in [self.N_x,self.N_y,self.frames] )):
         #     raise RuntimeError("call TrainingGraphFactory.setup()")
@@ -130,20 +138,16 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
     def _build_graph(self,Nx,Ny,frames,output_dimension):
         # placeholders for the states, actions, rewards, and whether terminal
         # size is batch, (x, y,), stored frames(4)
-        phi_i_ = tf.placeholder(shape=[None,Nx,Ny,frames],dtype=tf.float32)
-        phi_j_ = tf.placeholder(shape=[None,Nx,Ny,frames],dtype=tf.float32)
-        a_i_   = tf.placeholder(shape=[None,1],dtype=tf.uint8)
-        r_i_   = tf.placeholder(shape=[None,1],dtype=tf.float32)
-        t_i_   = tf.placeholder(shape=[None,1],dtype=tf.float32)
+        phi_i,phi_j,a_i,r_i,t_i = self.set_placeholders(Nx,Ny,frames)
 
         # ------------------------------------------------------------------
         with tf.name_scope('Q_i_online'):
-            Q_i_ = self.q_net.run(phi_i_,'online',True,False)
+            Q_i_ = self.q_net.run(phi_i,'online',True,False)
             #print("Q_i_ shape         = ",Q_i_.shape)
 
         with tf.name_scope('Value_function_i_online'):
             # convert actions that were taken into onehot format
-            a_list = tf.reshape(tf.cast(a_i_,tf.int32),[-1])
+            a_list = tf.reshape(tf.cast(a_i,tf.int32),[-1])
             print("a_list shape = ",a_list.shape)
 
             a_onehot = tf.one_hot(a_list, output_dimension)
@@ -167,7 +171,7 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
         # this is the same network as for Q_i_ - we set reuse=True
         # (it is also trainable)
         with tf.name_scope('Qj_online'):
-            Qj_online_ = self.q_net.run(phi_j_,'online',True,True)
+            Qj_online_ = self.q_net.run(phi_j,'online',True,True)
             Qj_online_inds = tf.argmax(Qj_online_,axis=1)
             Qj_onehot_inds = tf.one_hot(Qj_online_inds, output_dimension)
 
@@ -178,7 +182,7 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
         # set the weights/biases of the layers in the target network to be the
         # same as those in the online network every so many games.
         with tf.name_scope('Qj_target'):
-            Q_j_ = self.q_net.run(phi_j_,'target',False,False)
+            Q_j_ = self.q_net.run(phi_j,'target',False,False)
 
         # now only take values of Q (target) for state j, using action that
         # the online network would predict
@@ -188,10 +192,10 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
         # ------------------------------------------------------------------
         # get the future discounted reward
         with tf.name_scope('discounted_reward'):
-            y_          = tf.add( tf.squeeze(r_i_) , self.discount_factor*tf.multiply(tf.squeeze(t_i_),tf.squeeze(V_j_)))
+            y_          = tf.add( tf.squeeze(r_i) , self.discount_factor*tf.multiply(tf.squeeze(t_i),tf.squeeze(V_j_)))
 
         print("y shape = ",y_.shape)
-        print("r_i_ shape = ",tf.squeeze(r_i_).shape)
+        print("r_i_ shape = ",tf.squeeze(r_i).shape)
 
         # difference between value function (future discounted) and the value
         # funtion on state i
@@ -245,11 +249,11 @@ class DDQNTrainingGraphFactory(TrainingGraphFactory):
                         'train_op':train_op,
                         'update_target':update_target,
                         'merged':merged,
-                        'phi_i':phi_i_,
-                        'phi_j':phi_j_,
-                        'a_i':a_i_,
-                        'r_i':r_i_,
-                        't_i':t_i_,
+                        'phi_i':phi_i,
+                        'phi_j':phi_j,
+                        'a_i':a_i,
+                        'r_i':r_i,
+                        't_i':t_i,
                         'saver':saver}
 
         output_graph = TrainingGraph(graph_vars)
