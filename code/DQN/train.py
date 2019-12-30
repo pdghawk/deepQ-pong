@@ -81,9 +81,7 @@ class TrainingGraphFactory(ABC):
         pass
 
     def get_layer_names(self):
-        #return self.qnet.get_layer_names()
-        return ['conv_layer0/conv2d','conv_layer1/conv2d','conv_layer2/conv2d',
-                 'FC_layer0/dense','layer_out/dense']
+        return self.q_net.get_layer_names()
 
     def update_layer(self,layer):
         """ Update the weights/biases of target network
